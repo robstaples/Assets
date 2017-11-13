@@ -166,6 +166,72 @@ public class CaveGenerator : MonoBehaviour {
 	void CreatePassage(Room roomA, Room roomB, Coord tileA, Coord tileB) {
 		Room.ConnectRooms(roomA, roomB);
 		Debug.DrawLine(CoordToWorldPoint(tileA), CoordToWorldPoint(tileB), Color.green, 100);
+
+		List<Coord> line = GetLine(tileA, tileB);
+		foreach (Coord c in line) {
+			DrawCircle(c,1);
+		}
+	}
+
+	void DrawCircle(Coord c, int r) {
+		for (int x = -r; x <= r; x++) {
+			for (int y = -r; y <= r; y++) {
+				if (x*x + y*y <= r*r) {
+					int realX = c.tileX + x;
+					int realY = c.tileY + y;
+					if (IsInMapRange(realX, realY)) {
+						 map[realX,realY] = 0;
+					}
+				}
+			}
+		}
+	}
+
+	List<Coord> Getline(Coord from, Coord to) {
+		List<Coord> line = new List<Coord>;
+
+		int x = from.tileX;
+		int y = from.tileY;
+
+		int dx = to.tileX - from.tileX;
+		int dy = to.tileY - from.tileY;
+
+		bool inverted = false;
+		int step = Math.Sign (dx);
+		int gradientStep = Math.Sign (dy);
+
+		int longest = Mathf.abs(dx);
+		int shortest = Mathf.abs(dy);
+
+		if (longest < shortest) {
+			inverted = true;
+			longest = Mathf.abs(dy);
+			shortest = Mathf.abs(dx);
+
+			step = Math.Sign (dy);
+			gradientStep = Math.Sign (dx);
+		}
+
+		int gradientAccumulation = longest / 2;
+		for (int i = 0; i < longest; i++) {
+			line.Add(new Coord(x,y));
+
+			if (inverted)
+				y +=step;
+			else
+				x +=step;
+
+			gradientAccumulation += shortest;
+			if (gradientAccumulation <= longest) {
+				if (inverted)
+					y += gradientStep;
+				else
+					x += gradientStep;
+
+				gradientAccumulation -= longest;
+			}
+		}
+		return line;
 	}
 
 	Vector3 CoordToWorldPoint(Coord tile) {
@@ -261,7 +327,7 @@ public class CaveGenerator : MonoBehaviour {
 					if (neighbourX != gridX || neighbourY != gridY) {
 						wallCount += map [neighbourX, neighbourY];
 					}
-				} 
+				}
 				else {
 					wallCount++;
 				}
