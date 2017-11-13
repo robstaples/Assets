@@ -6,18 +6,19 @@ public class CaveMesh : MonoBehaviour {
 
 	public SquareGrid squareGrid;
 	public MeshFilter walls;
+
 	List<Vector3> vertices;
 	List<int> triangles;
 
-	Dictionary<int, List<Triangles>> triangleDictionary = new Dictionary<int, List<Triangles>> ();
+	Dictionary<int, List<Triangle>> triangleDictionary = new Dictionary<int, List<Triangle>> ();
 	List<List<int>> outlines = new List<List<int>>();
-	HashSet<int> checkedVerticies = new HashSet<int>();
+	HashSet<int> checkedVertices = new HashSet<int>();
 
 	public void GenerateMesh (int[,] map, float squareSize) {
 
 		triangleDictionary.Clear();
 		outlines.Clear();
-		checkedVerticies.Clear();
+		checkedVertices.Clear();
 
 		squareGrid = new SquareGrid (map, squareSize);
 
@@ -44,19 +45,19 @@ public class CaveMesh : MonoBehaviour {
 
 		CalculateMeshOutlines();
 
-		List<Vector3> wallVerticies = new List<Vector3>();
+		List<Vector3> wallVertices = new List<Vector3>();
 		List<int> wallTriangles = new List<int>();
 		Mesh wallMesh = new Mesh();
 		float wallHeight = 5;
 
 		foreach (List<int> outline in outlines) {
-			for (int i = 0; i < outline.count -1; i++) {
-				int startIndex = wallVerticies.Count;
+			for (int i = 0; i < outline.Count -1; i++) {
+				int startIndex = wallVertices.Count;
 
-				wallVerticies.Add(verticies(outline[i])); //left
-				wallVerticies.Add(verticies(outline[i + 1])); //right
-				wallVerticies.Add(verticies(outline[i - Vector3.up * wallHeight])); //bottomleft
-				wallVerticies.Add(verticies(outline[i + 1 - Vector3.up * wallHeight])); //bottomright
+				wallVertices.Add(vertices[outline[i]]); //left
+				wallVertices.Add(vertices[outline[i + 1]]); //right
+				wallVertices.Add(vertices[outline[i]] - Vector3.up * wallHeight); //bottomleft
+				wallVertices.Add(vertices[outline[i + 1]]  - Vector3.up * wallHeight); //bottomright
 
 				wallTriangles.Add(startIndex + 0);
 				wallTriangles.Add(startIndex + 2);
@@ -67,11 +68,12 @@ public class CaveMesh : MonoBehaviour {
 				wallTriangles.Add(startIndex + 0);
 			}
 		}
-		wallMesh.vertices = wallVerticies.ToArray();
+		wallMesh.vertices = wallVertices.ToArray();
 		wallMesh.triangles = wallTriangles.ToArray();
 		walls.mesh = wallMesh;
 
 	}
+
 
 	void TriangulateSquare(Square square) {
 		switch (square.configuration) {
@@ -125,10 +127,10 @@ public class CaveMesh : MonoBehaviour {
 		//4 point
 		case 15:
 			meshFromPoints (square.topLeft, square.topRight, square.bottomRight, square.bottomLeft);
-			checkedVerticies.add(square.topLeft.vertexIndex);
-			checkedVerticies.add(square.topRight.vertexIndex);
-			checkedVerticies.add(square.bottomRight.vertexIndex);
-			checkedVerticies.add(square.bottomLeft.vertexIndex);
+			checkedVertices.Add(square.topLeft.vertexIndex);
+			checkedVertices.Add(square.topRight.vertexIndex);
+			checkedVertices.Add(square.bottomRight.vertexIndex);
+			checkedVertices.Add(square.bottomLeft.vertexIndex);
 			break;
 		}
 	}
@@ -172,22 +174,22 @@ public class CaveMesh : MonoBehaviour {
 		}
 		else {
 			List<Triangle> triangleList = new List<Triangle>();
-			triangleList.add(triangle);
+			triangleList.Add(triangle);
 			triangleDictionary.Add(vertexIndexKey, triangleList);
 		}
 	}
 
 	void CalculateMeshOutlines() {
-		for (int vertexIndex = 0; vertexIndex < vertices.count; vertexIndex++) {
-			if (!checkedVerticies.Contains(vertexIndex)) {
-				int newOutlineVertex = GetConnectedOutlineVertex[vertexIndex];
+		for (int vertexIndex = 0; vertexIndex < vertices.Count; vertexIndex++) {
+			if (!checkedVertices.Contains(vertexIndex)) {
+				int newOutlineVertex = GetConnectedOutlineVertex(vertexIndex);
 				if (newOutlineVertex != -1) {
-					checkedVerticies.add(vertexIndex);
+					checkedVertices.Add(vertexIndex);
 
 					List<int> newOutline = new List<int>();
-					newOutline.add(vertexIndex);
-					outlines.add(newOutline);
-					FollowOutline(newOutlineVertex, outlines.count -1);
+					newOutline.Add(vertexIndex);
+					outlines.Add(newOutline);
+					FollowOutline(newOutlineVertex, outlines.Count -1);
 					outlines[outlines.Count-1].Add(vertexIndex);
 				}
 			}
@@ -196,7 +198,7 @@ public class CaveMesh : MonoBehaviour {
 
 	void FollowOutline(int vertexIndex, int outlineIndex) {
 		outlines[outlineIndex].Add (vertexIndex);
-		checkedVerticies.Add (vertexIndex);
+		checkedVertices.Add (vertexIndex);
 		int nextVertexIndex = GetConnectedOutlineVertex (vertexIndex);
 
 		if (nextVertexIndex != -1) {
@@ -212,7 +214,7 @@ public class CaveMesh : MonoBehaviour {
 
 			for (int j=0; j < 3; j++){
 				int vertexB = triangle [j];
-				if (vertexB != vertexIndex && !checkedVerticies.Contains(vertexB)) {
+				if (vertexB != vertexIndex && !checkedVertices.Contains(vertexB)) {
 					if (isOutlineEdge(vertexIndex, vertexB)) {
 						return vertexB;
 					}
@@ -224,7 +226,7 @@ public class CaveMesh : MonoBehaviour {
 	}
 
 	bool isOutlineEdge (int vertexA, int vertexB) {
-		List<triangle> trianglesContainingVertexA = triangleDictionary (vertexA);
+		List<Triangle> trianglesContainingVertexA = triangleDictionary[vertexA];
 		int sharedTriangleCount = 0;
 		for (int i=0; i <trianglesContainingVertexA.Count; i++) {
 			if (trianglesContainingVertexA[i].Contains(vertexB)) {
@@ -248,7 +250,7 @@ public class CaveMesh : MonoBehaviour {
 			vertexIndexB = b;
 			vertexIndexC = c;
 
-			vertices new int[3];
+			vertices = new int[3];
 			vertices[0] = a;
 			vertices[1] = b;
 			vertices[2] = c;
