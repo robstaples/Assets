@@ -6,6 +6,9 @@ public class CaveMesh : MonoBehaviour {
 
 	public SquareGrid squareGrid;
 	public MeshFilter walls;
+	public MeshFilter cave;
+
+	public bool is2D;
 
 	List<Vector3> vertices;
 	List<int> triangles;
@@ -32,13 +35,29 @@ public class CaveMesh : MonoBehaviour {
 		}
 
 		Mesh mesh = new Mesh ();
-		GetComponent<MeshFilter>().mesh = mesh;
+		cave.mesh = mesh;
 
 		mesh.vertices = vertices.ToArray();
 		mesh.triangles = triangles.ToArray();
 		mesh.RecalculateNormals();
 
-		CreateWallMesh();
+		int tileAmount = 10;
+		Vector2[] uvs = new vector2[vertices.Count];
+		for (int i = 0; i < vertices.Count; i++) {
+			float	percentX = Mathf.InverseLerp(-map.GetLength(0)/2*squareSize, map.GetLength(0)/2*squareSize, vertices[i].x) * tileAmount;
+			float	percentY = Mathf.InverseLerp(-map.GetLength(0)/2*squareSize, map.GetLength(0)/2*squareSize, vertices[i].z) * tileAmount;
+			uvs[i] = new Vector2(percentX, percentY);
+		}
+		mesh.uv = uvs;
+
+
+		if (is2D) {
+		 Generate2DColliders();
+	 	}
+
+		if (!is2D) {
+			CreateWallMesh();
+		}
 	}
 
 	void CreateWallMesh() {
@@ -72,8 +91,29 @@ public class CaveMesh : MonoBehaviour {
 		wallMesh.triangles = wallTriangles.ToArray();
 		walls.mesh = wallMesh;
 
+		MeshCollider wallCollider = walls.gameObject.AddComponent<MeshCollider>();
+		wallCollider.sharedMesh = wallMesh;
 	}
 
+	void Generate2DColliders() {
+
+		EdgeCollider2D[] currentColliders = gameObject.GetComponents<MeshCollider2D>();
+		for (int i = 0; i < currentColliders.Length; i++) {
+			Destroy(currentColliders[i]);
+		}
+
+		CalculateMeshOutlines();
+
+		foreach (List<int> outline in outlines) {
+			EdgeCollider2D edgeCollider = gameObject.AddComponent<EdgeCollider2D>();
+			Vector2[] edgePoints = new Vector2(outline.Count);
+
+			for (int i = 0; i < outline.Count; i++) {
+				edgepoints = new Vector2(vertices[outline[i]].x, vertices[outline[i]].z);
+			}
+			edgeCollider2D.points = edgePoints;
+		}
+	}
 
 	void TriangulateSquare(Square square) {
 		switch (square.configuration) {
