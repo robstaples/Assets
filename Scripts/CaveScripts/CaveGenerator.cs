@@ -7,17 +7,19 @@ public class CaveGenerator : MonoBehaviour {
 
 	public int width;
 	public int height;
-	public int smooth;
-	public int border;
 
 	public string seed;
 	public bool useRandomSeed;
 
-	[Range (0,100)]
+	[Range (40,50)]
 	public int randomFillPercent;
 
-	int[,] map;
+	[Header ("Advanced")]
+	public int border = 1;
+	public int passageWidth = 3;
+	public int smooth = 5;
 
+	int[,] map;
 	void Start() {
 		GenerateMap ();
 	}
@@ -165,11 +167,10 @@ public class CaveGenerator : MonoBehaviour {
 
 	void CreatePassage(Room roomA, Room roomB, Coord tileA, Coord tileB) {
 		Room.ConnectRooms(roomA, roomB);
-		Debug.DrawLine(CoordToWorldPoint(tileA), CoordToWorldPoint(tileB), Color.green, 100);
 
 		List<Coord> line = GetLine(tileA, tileB);
 		foreach (Coord c in line) {
-			DrawCircle(c,1);
+			DrawCircle(c,passageWidth);
 		}
 	}
 
@@ -187,8 +188,8 @@ public class CaveGenerator : MonoBehaviour {
 		}
 	}
 
-	List<Coord> Getline(Coord from, Coord to) {
-		List<Coord> line = new List<Coord>;
+	List<Coord> GetLine(Coord from, Coord to) {
+		List<Coord> line = new List<Coord>();
 
 		int x = from.tileX;
 		int y = from.tileY;
@@ -200,13 +201,13 @@ public class CaveGenerator : MonoBehaviour {
 		int step = Math.Sign (dx);
 		int gradientStep = Math.Sign (dy);
 
-		int longest = Mathf.abs(dx);
-		int shortest = Mathf.abs(dy);
+		int longest = Mathf.Abs(dx);
+		int shortest = Mathf.Abs(dy);
 
 		if (longest < shortest) {
 			inverted = true;
-			longest = Mathf.abs(dy);
-			shortest = Mathf.abs(dx);
+			longest = Mathf.Abs(dy);
+			shortest = Mathf.Abs(dx);
 
 			step = Math.Sign (dy);
 			gradientStep = Math.Sign (dx);
@@ -217,16 +218,16 @@ public class CaveGenerator : MonoBehaviour {
 			line.Add(new Coord(x,y));
 
 			if (inverted)
-				y +=step;
+				y += step;
 			else
-				x +=step;
+				x += step;
 
 			gradientAccumulation += shortest;
-			if (gradientAccumulation <= longest) {
+			if (gradientAccumulation >= longest) {
 				if (inverted)
-					y += gradientStep;
-				else
 					x += gradientStep;
+				else
+					y += gradientStep;
 
 				gradientAccumulation -= longest;
 			}

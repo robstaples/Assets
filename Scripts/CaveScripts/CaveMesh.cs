@@ -7,6 +7,8 @@ public class CaveMesh : MonoBehaviour {
 	public SquareGrid squareGrid;
 	public MeshFilter walls;
 	public MeshFilter cave;
+	public MeshFilter ground;
+	float wallHeight = 5;
 
 	public bool is2D;
 
@@ -37,12 +39,13 @@ public class CaveMesh : MonoBehaviour {
 		Mesh mesh = new Mesh ();
 		cave.mesh = mesh;
 
+
 		mesh.vertices = vertices.ToArray();
 		mesh.triangles = triangles.ToArray();
 		mesh.RecalculateNormals();
 
 		int tileAmount = 10;
-		Vector2[] uvs = new vector2[vertices.Count];
+		Vector2[] uvs = new Vector2[vertices.Count];
 		for (int i = 0; i < vertices.Count; i++) {
 			float	percentX = Mathf.InverseLerp(-map.GetLength(0)/2*squareSize, map.GetLength(0)/2*squareSize, vertices[i].x) * tileAmount;
 			float	percentY = Mathf.InverseLerp(-map.GetLength(0)/2*squareSize, map.GetLength(0)/2*squareSize, vertices[i].z) * tileAmount;
@@ -57,7 +60,47 @@ public class CaveMesh : MonoBehaviour {
 
 		if (!is2D) {
 			CreateWallMesh();
+			CreateGoundMesh (map.GetLength (0), map.GetLength (1));
 		}
+	}
+
+	void CreateGoundMesh (int width, int height) {
+		Mesh groundMesh = new Mesh ();
+		Vector3[] groundVertices;
+		int[] groundTriangles;
+		Vector2[] groundUvs;
+
+		ground.mesh = groundMesh;
+		groundVertices = new Vector3 [(width + 1) * (height + 1)];
+		for (int y = 0, i = 0; y <= height; y++) {
+			for (int x = 0; x <= width; x++, i++) {
+				groundVertices[i] = new Vector3 (x, -wallHeight/2, y);
+			}
+		}
+		groundMesh.vertices = groundVertices;
+
+		groundTriangles = new int[width * height * 6];
+		for (int ti = 0, vi = 0, y =0; y < height; y++, vi ++) {
+			for (int x = 0; x < width; x++, ti +=6, vi++) {
+				groundTriangles [ti] = vi;
+				groundTriangles [ti + 3] = groundTriangles [ti + 2] = vi + 1;
+				groundTriangles [ti + 4] = groundTriangles [ti + 1] = vi + width + 1;
+				groundTriangles [ti + 5] = vi + width + 2;
+			}
+		}
+		groundMesh.triangles = groundTriangles;
+		int tileAmount = 10;
+		groundUvs = new Vector2[groundVertices.Length];
+		for (int i = 0; i < groundVertices.Length; i++) {
+			float	percentX = Mathf.InverseLerp(-width/2, width/2, groundVertices[i].x) * tileAmount;
+			float	percentY = Mathf.InverseLerp(-width/2, width/2, groundVertices[i].z) * tileAmount;
+			groundUvs[i] = new Vector2(percentX, percentY);
+		}
+		groundMesh.uv = groundUvs;
+
+		MeshCollider groundCollider = ground.gameObject.AddComponent<MeshCollider>();
+		groundCollider.sharedMesh = groundMesh;
+
 	}
 
 	void CreateWallMesh() {
@@ -67,7 +110,6 @@ public class CaveMesh : MonoBehaviour {
 		List<Vector3> wallVertices = new List<Vector3>();
 		List<int> wallTriangles = new List<int>();
 		Mesh wallMesh = new Mesh();
-		float wallHeight = 5;
 
 		foreach (List<int> outline in outlines) {
 			for (int i = 0; i < outline.Count -1; i++) {
@@ -97,7 +139,7 @@ public class CaveMesh : MonoBehaviour {
 
 	void Generate2DColliders() {
 
-		EdgeCollider2D[] currentColliders = gameObject.GetComponents<MeshCollider2D>();
+		EdgeCollider2D[] currentColliders = gameObject.GetComponents<EdgeCollider2D>();
 		for (int i = 0; i < currentColliders.Length; i++) {
 			Destroy(currentColliders[i]);
 		}
@@ -105,11 +147,11 @@ public class CaveMesh : MonoBehaviour {
 		CalculateMeshOutlines();
 
 		foreach (List<int> outline in outlines) {
-			EdgeCollider2D edgeCollider = gameObject.AddComponent<EdgeCollider2D>();
-			Vector2[] edgePoints = new Vector2(outline.Count);
+			EdgeCollider2D edgeCollider2D = gameObject.AddComponent<EdgeCollider2D>();
+			Vector2[] edgePoints = new Vector2[outline.Count];
 
 			for (int i = 0; i < outline.Count; i++) {
-				edgepoints = new Vector2(vertices[outline[i]].x, vertices[outline[i]].z);
+				edgePoints[i] = new Vector2(vertices[outline[i]].x, vertices[outline[i]].z);
 			}
 			edgeCollider2D.points = edgePoints;
 		}
