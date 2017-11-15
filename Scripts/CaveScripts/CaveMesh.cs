@@ -64,17 +64,20 @@ public class CaveMesh : MonoBehaviour {
 		}
 	}
 
-	void CreateGoundMesh (int width, int height) {
+	void CreateGoundMesh (int width, int height, int squareSize) {
 		Mesh groundMesh = new Mesh ();
+		//Change to list to bring into alignment with other meshes{Refactor}
 		Vector3[] groundVertices;
 		int[] groundTriangles;
 		Vector2[] groundUvs;
 
 		ground.mesh = groundMesh;
+
 		groundVertices = new Vector3 [(width + 1) * (height + 1)];
 		for (int y = 0, i = 0; y <= height; y++) {
 			for (int x = 0; x <= width; x++, i++) {
-				groundVertices[i] = new Vector3 (x, -wallHeight/2, y);
+				//Changed Vector position
+				groundVertices[i] = new Vector3 (-width/2 + x * squareSize + squareSize/2, -wallHeight/2, -height/2 + y * squareSize + squareSize/2);
 			}
 		}
 		groundMesh.vertices = groundVertices;
@@ -89,7 +92,9 @@ public class CaveMesh : MonoBehaviour {
 			}
 		}
 		groundMesh.triangles = groundTriangles;
+		//This should be a variable in the Editor {Refactor}
 		int tileAmount = 10;
+		//Create a method to calculate UV's for all methods {Refactor}
 		groundUvs = new Vector2[groundVertices.Length];
 		for (int i = 0; i < groundVertices.Length; i++) {
 			float	percentX = Mathf.InverseLerp(-width/2, width/2, groundVertices[i].x) * tileAmount;
@@ -110,6 +115,7 @@ public class CaveMesh : MonoBehaviour {
 		List<Vector3> wallVertices = new List<Vector3>();
 		List<int> wallTriangles = new List<int>();
 		Mesh wallMesh = new Mesh();
+		Vector2[] wallUvs;
 
 		foreach (List<int> outline in outlines) {
 			for (int i = 0; i < outline.Count -1; i++) {
@@ -129,8 +135,22 @@ public class CaveMesh : MonoBehaviour {
 				wallTriangles.Add(startIndex + 0);
 			}
 		}
+
+		//Code for uv's
+		//Get wall wallVertices
+		//create for loop with wallVertices as count
+		int tileAmount = 10;
+		//Create a method to calculate UV's for all methods {Refactor}
+		wallUvs = new Vector2[wallVertices.Count];
+		for (int i = 0; i < wallVertices.Count; i++) {
+			float	percentX = Mathf.InverseLerp(-width/2, width/2, wallVertices[i].x) * tileAmount;
+			float	percentY = Mathf.InverseLerp(-width/2, width/2, wallVertices[i].z) * tileAmount;
+			wallUvs[i] = new Vector2(percentX, percentY);
+		}
+
 		wallMesh.vertices = wallVertices.ToArray();
 		wallMesh.triangles = wallTriangles.ToArray();
+		wallMesh.uv = wallUvs;
 		walls.mesh = wallMesh;
 
 		MeshCollider wallCollider = walls.gameObject.AddComponent<MeshCollider>();
