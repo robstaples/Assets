@@ -19,7 +19,8 @@ public class CaveMesh : MonoBehaviour {
 	List<List<int>> outlines = new List<List<int>>();
 	HashSet<int> checkedVertices = new HashSet<int>();
 
-	public void GenerateMesh (int[,] map, float squareSize) {
+	//I need this to return a Mesh or a Mesh Array
+	public Mesh GenerateCaveMesh (int[,] map, float squareSize) {
 
 		triangleDictionary.Clear();
 		outlines.Clear();
@@ -53,18 +54,11 @@ public class CaveMesh : MonoBehaviour {
 		}
 		mesh.uv = uvs;
 
+		reurn mesh;
 
-		if (is2D) {
-		 Generate2DColliders();
-	 	}
-
-		if (!is2D) {
-			CreateWallMesh();
-			CreateGoundMesh (map.GetLength (0), map.GetLength (1));
-		}
 	}
-
-	void CreateGoundMesh (int width, int height, int squareSize) {
+	//Change to return a mesh
+	public Mesh CreateGoundMesh (int width, int height, int squareSize) {
 		Mesh groundMesh = new Mesh ();
 		//Change to list to bring into alignment with other meshes{Refactor}
 		Vector3[] groundVertices;
@@ -106,9 +100,10 @@ public class CaveMesh : MonoBehaviour {
 		MeshCollider groundCollider = ground.gameObject.AddComponent<MeshCollider>();
 		groundCollider.sharedMesh = groundMesh;
 
+		return groundMesh;
 	}
 
-	void CreateWallMesh() {
+	void CreateWallMesh(Mesh caveMesh) {
 
 		CalculateMeshOutlines();
 
@@ -157,7 +152,7 @@ public class CaveMesh : MonoBehaviour {
 		wallCollider.sharedMesh = wallMesh;
 	}
 
-	void Generate2DColliders() {
+	public void Generate2DColliders() {
 
 		EdgeCollider2D[] currentColliders = gameObject.GetComponents<EdgeCollider2D>();
 		for (int i = 0; i < currentColliders.Length; i++) {

@@ -9,6 +9,7 @@ public class MapPreview : MonoBehaviour
     public MeshFilter meshFilter;
     public MeshRenderer meshRenderer;
 
+    //Add support for 2D
     public enum DrawMode { NoiseMap, Mesh, FalloffMap };
     public DrawMode drawMode;
 
