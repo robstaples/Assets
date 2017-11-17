@@ -7,19 +7,19 @@ public class CavePreviewEditor : Editor
 {
   public override void OnInspectorGUI()
   {
-      CavePreview mapPreview = (CavePreview)target;
+      CavePreview cavePreview = (CavePreview)target;
 
       if (DrawDefaultInspector())
       {
-          if (mapPreview.autoUpdate)
+          if (cavePreview.autoUpdate)
           {
-              mapPreview.DrawMapInEditor();
+              cavePreview.DrawMapInEditor();
           }
       }
 
       if (GUILayout.Button("Generate"))
       {
-          mapPreview.DrawMapInEditor();
+          cavePreview.DrawMapInEditor();
       }
   }
 }

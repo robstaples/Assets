@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class CaveMesh : MonoBehaviour {
 
+	//Learn what this does so I can spin it out
 	public SquareGrid squareGrid;
 	public MeshFilter walls;
 	public MeshFilter cave;

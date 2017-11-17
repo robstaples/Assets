@@ -24,6 +24,8 @@ public class MapPreview : MonoBehaviour
     //public TextureData textureData;
 
     //public Material caveMaterial;
+    //public Material wallMaterial;
+    //public Material groundMaterial;
 
     public void DrawMapInEditor(int[,] map, float squareSize) {
 
