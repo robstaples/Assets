@@ -53,8 +53,9 @@ public class CaveGenerator : MonoBehaviour {
 			}
 		}
 
+		//I need to redo this.
 		CaveMesh meshGen = GetComponent<CaveMesh> ();
-		meshGen.GenerateMesh (borderedMap, 1);
+		meshGen.GenerateCaveMesh (borderedMap, 1);
 	}
 
 	void ProcessMap() {

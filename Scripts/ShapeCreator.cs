@@ -1,11 +1,11 @@
 using System;
-using System.Generic;
-using Unity;
+using System.Collections.Generic;
+using UnityEngine;
 
 
 public class ShapeCreator : MonoBehaviour{
 
-  [HideInEditor]
+	[HideInInspector]
   public List<Vector3> points = new List<Vector3>();
 
 }

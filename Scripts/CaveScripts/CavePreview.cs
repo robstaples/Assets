@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class MapPreview : MonoBehaviour
+public class CavePreview : MonoBehaviour
 {
     public bool autoUpdate;
 
@@ -10,7 +10,8 @@ public class MapPreview : MonoBehaviour
     public MeshRenderer caveMeshRenderer;
 
     //Add support for flatshading. {Scope increase}
-    public enum DrawMode{2D, 3D};
+    //public enum DrawMode{ twoD, threeD };
+	//public DrawMode drawMode;
 
     //Wall MeshData
     public MeshFilter wallMeshFilter;
@@ -28,34 +29,24 @@ public class MapPreview : MonoBehaviour
     //public Material groundMaterial;
 
     public void DrawMapInEditor(int[,] map, float squareSize) {
+		Mesh caveMesh = new Mesh ();
 
-      if (DrawMode == 2D) {
-        CaveMesh.GenerateCaveMesh(map, squareSize);
-        CaveMesh.Generate2DColliders();
-      }
+//		if (drawMode == DrawMode.twoD) {
+//		caveMesh = CaveMesh.GenerateCaveMesh(map, squareSize, true);
+//		caveMesh = CaveMesh.Generate2DColliders();
+//		}
 
-      if (DrawMode == 3D) {
-        Mesh caveMesh = CaveMesh.GenerateCaveMesh(map, squareSize);
+		//if (drawMode == DrawMode.threeD) {
+		caveMesh = new CaveMesh(map, squareSize, false);
 
-        DrawCaveMesh(caveMesh);
-        DrawWallMesh(CaveMesh.CreateWallMesh(caveMesh));
-        DrawGroundMesh(CaveMesh.CreateGoundMesh (map.GetLength (0), map.GetLength (1)));
-      }
+		DrawCaveMesh(caveMesh);
+		//}
 
     }
+	//This will draw all the required meshes for the cave
     public void DrawCaveMesh(Mesh meshData)
-    {
-        meshFilter.sharedMesh = meshData.CreateMesh();
-        meshFilter.gameObject.SetActive(true);
-    }
-    public void DrawWallMesh(Mesh meshData)
-    {
-        meshFilter.sharedMesh = meshData.CreateMesh();
-        meshFilter.gameObject.SetActive(true);
-    }
-    public void DrawGroundMesh(Mesh meshData)
-    {
-        meshFilter.sharedMesh = meshData.CreateMesh();
-        meshFilter.gameObject.SetActive(true);
-    }
+	{
+		caveMeshFilter.sharedMesh = meshData;
+		caveMeshRenderer.gameObject.SetActive (true);
+	}
 }
