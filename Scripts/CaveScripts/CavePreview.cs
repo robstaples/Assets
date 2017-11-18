@@ -1,8 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class CavePreview : MonoBehaviour
-{
+public class CavePreview : MonoBehaviour {
     public bool autoUpdate;
 
     //Cave MeshData
@@ -56,6 +55,9 @@ public class CavePreview : MonoBehaviour
 //		}
 
 		//if (drawMode == DrawMode.threeD) {
+    CaveGenerator meshGen = GetComponent<CaveGenerator> ();
+    meshGen.GenerateMap();
+
 		caveMesh = new CaveMesh(map, squareSize, false);
 
 		DrawCaveMesh(caveMesh);
@@ -63,9 +65,30 @@ public class CavePreview : MonoBehaviour
 
     }
 	//This will draw all the required meshes for the cave
-    public void DrawCaveMesh(CaveMesh meshData)
+    public void DrawCaveMesh(CaveMesh caveMesh)
 	{
-		caveMeshFilter.sharedMesh = meshData;
+    Mesh cMesh = new Mesh();
+    cMesh.vertices = caveMesh.vertices.ToArray();
+		cMesh.triangles = caveMesh.triangles.ToArray();
+    cMesh.uv = caveMesh.uvs;
+    cMesh.RecalculateNormals();
+		caveMeshFilter.sharedMesh = cMesh;
 		caveMeshRenderer.gameObject.SetActive (true);
+
+    Mesh wMesh = new Mesh();
+    wMesh.vertices = caveMesh.wallCaveMesh.vertices.ToArray();
+    wMesh.triangles = caveMesh.wallCaveMesh.triangles.ToArray();
+    wMesh.uv = caveMesh.wallCaveMesh.uvs;
+    wMesh.RecalculateNormals();
+    wallMeshFilter.sharedMesh = wMesh;
+		wallMeshRenderer.gameObject.SetActive (true);
+
+    Mesh gMesh = new Mesh();
+    gMesh.vertices = caveMesh.groundCaveMesh.vertices.ToArray();
+    gMesh.triangles = caveMesh.groundCaveMesh.triangles.ToArray();
+    gMesh.uv = caveMesh.groundCaveMesh.uvs;
+    gMesh.RecalculateNormals();
+    groundMeshFilter.sharedMesh = gMesh;
+		groundMeshRenderer.gameObject.SetActive (true);
 	}
 }

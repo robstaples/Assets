@@ -20,21 +20,24 @@ public class CaveGenerator : MonoBehaviour {
 	public int smooth = 5;
 
 	int[,] map;
+
 	void Start() {
-		GenerateMap ();
+		GenerateMap();
 	}
+
+	//Need to have a look at changing this {Refactor}
 	void Update() {
 		if (Input.GetMouseButtonDown (0)) {
-			GenerateMap ();
+			GenerateMap();
 		}
 	}
 
 	void GenerateMap() {
 		map = new int[width, height];
-		RandomFillMap ();
+		RandomFillMap();
 
 		for (int i = 0; i < smooth; i++) {
-			SmoothMap ();
+			SmoothMap();
 		}
 
 		ProcessMap();
@@ -52,10 +55,6 @@ public class CaveGenerator : MonoBehaviour {
 				}
 			}
 		}
-
-		//I need to redo this.
-		CaveMesh meshGen = GetComponent<CaveMesh> ();
-		meshGen.GenerateCaveMesh (borderedMap, 1);
 	}
 
 	void ProcessMap() {
