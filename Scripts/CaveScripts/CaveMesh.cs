@@ -32,8 +32,8 @@ public class CaveMesh {
 		AddVertices();
 		AddUVs();
 
-		//Create wall mesh
-		//Create ground mesh
+		wallCaveMesh = new WallCaveMesh(map, squareSize, triangleDictionary, outlines, checkedVertices);
+		groundCaveMesh = new GroundCaveMesh(map, squareSize);
 	}
 
 	void AddVertices() {
@@ -302,7 +302,6 @@ public class WallCaveMesh {
 		}
 
 		int tileAmount = 10;
-		//Create a method to calculate UV's for all methods {Refactor}
 		wallUvs = new Vector2[wallVertices.Count];
 		for (int i = 0; i < wallVertices.Count; i++) {
 			float	percentX = Mathf.InverseLerp(-map.GetLength(1)/2, -map.GetLength(1)/2, wallVertices[i].x) * tileAmount;
@@ -377,46 +376,57 @@ public class GroundCaveMesh {
 	Vector3[] vertices;
 	int[] triangles;
 	Vector2[] uvs;
+	int width;
+	int height;
+	int squareSize;
+	float wallHeight = 5;
+
+	public GroundCaveMesh(int[,] _map, int _squareSize) {
+		Vector3[] vertices = new Vector3[map.GetLength(0), map.GetLength(1)];
+		squareSize = _squareSize;
+		width = _map.GetLength(0);
+		height = _map.GetLength(1);
+
+		GroundVertices();
+		GroundTriangles();
+		GroundUVS();
+	}
 
 	//Change to return a mesh
-	Mesh CreateGroundMesh (int width, int height, int squareSize) {
-		Mesh groundMesh = new Mesh ();
-		//Change to list to bring into alignment with other meshes{Refactor}
-		Vector3[] groundVertices;
-		int[] groundTriangles;
-		Vector2[] groundUvs;
+	void GroundVertices () {
 
-		groundVertices = new Vector3 [(width + 1) * (height + 1)];
-		for (int y = 0, i = 0; y <= height; y++) {
+		vertices = new Vector3 [(width + 1) * (height + 1)];
+		for (int y = 0, i = 0; y <= map.GetLength(1); y++) {
 			for (int x = 0; x <= width; x++, i++) {
 				//Changed Vector position
-				groundVertices[i] = new Vector3 (-width/2 + x * squareSize + squareSize/2, -wallHeight/2, -height/2 + y * squareSize + squareSize/2);
+				vertices[i] = new Vector3 (-width/2 + x * squareSize + squareSize/2, -wallHeight/2, -height/2 + y * squareSize + squareSize/2);
 			}
 		}
-		groundMesh.vertices = groundVertices;
+	}
 
-		groundTriangles = new int[width * height * 6];
+	void GroundTriangles () {
+		//Change to triangles struct;
+		triangles = new int[width * height * 6];
 		for (int ti = 0, vi = 0, y =0; y < height; y++, vi ++) {
 			for (int x = 0; x < width; x++, ti +=6, vi++) {
-				groundTriangles [ti] = vi;
-				groundTriangles [ti + 3] = groundTriangles [ti + 2] = vi + 1;
-				groundTriangles [ti + 4] = groundTriangles [ti + 1] = vi + width + 1;
-				groundTriangles [ti + 5] = vi + width + 2;
+				triangles [ti] = vi;
+				triangles [ti + 3] = groundTriangles [ti + 2] = vi + 1;
+				triangles [ti + 4] = groundTriangles [ti + 1] = vi + width + 1;
+				triangles [ti + 5] = vi + width + 2;
 			}
 		}
-		groundMesh.triangles = groundTriangles;
+	}
+
+	void GroundUVS () {
 		//This should be a variable in the Editor {Refactor}
 		int tileAmount = 10;
-		//Create a method to calculate UV's for all methods {Refactor}
+		//Create a method or struct to calculate UV's for all methods {Refactor}
 		groundUvs = new Vector2[groundVertices.Length];
 		for (int i = 0; i < groundVertices.Length; i++) {
 			float	percentX = Mathf.InverseLerp(-width/2, width/2, groundVertices[i].x) * tileAmount;
 			float	percentY = Mathf.InverseLerp(-width/2, width/2, groundVertices[i].z) * tileAmount;
 			groundUvs[i] = new Vector2(percentX, percentY);
 		}
-		groundMesh.uv = groundUvs;
-
-		return groundMesh;
 	}
 }
 public struct Triangle {
@@ -445,23 +455,3 @@ public struct Triangle {
 		return vertexIndex == vertexIndexA || vertexIndex == vertexIndexB || vertexIndex == vertexIndexC;
 	}
 }
-
-//	public void Generate2DColliders() {
-//
-//		EdgeCollider2D[] currentColliders = gameObject.GetComponents<EdgeCollider2D>();
-//		for (int i = 0; i < currentColliders.Length; i++) {
-//			Destroy(currentColliders[i]);
-//		}
-//
-//		CalculateMeshOutlines();
-//
-//		foreach (List<int> outline in outlines) {
-//			EdgeCollider2D edgeCollider2D = gameObject.AddComponent<EdgeCollider2D>();
-//			Vector2[] edgePoints = new Vector2[outline.Count];
-//
-//			for (int i = 0; i < outline.Count; i++) {
-//				edgePoints[i] = new Vector2(vertices[outline[i]].x, vertices[outline[i]].z);
-//			}
-//			edgeCollider2D.points = edgePoints;
-//		}
-//	}

@@ -6,6 +6,7 @@ public class CavePreview : MonoBehaviour
     public bool autoUpdate;
 
     //Cave MeshData
+    public CaveMesh caveMesh;
     public MeshFilter caveMeshFilter;
     public MeshRenderer caveMeshRenderer;
 
@@ -24,16 +25,34 @@ public class CavePreview : MonoBehaviour
     //public CaveSettings caveSettings;
     //public TextureData textureData;
 
-    //public Material caveMaterial;
-    //public Material wallMaterial;
-    //public Material groundMaterial;
+    public Material caveMaterial;
+    public Material wallMaterial;
+    public Material groundMaterial;
 
     public void DrawMapInEditor(int[,] map, float squareSize) {
-		Mesh caveMesh = new Mesh ();
 
 //		if (drawMode == DrawMode.twoD) {
 //		caveMesh = CaveMesh.GenerateCaveMesh(map, squareSize, true);
-//		caveMesh = CaveMesh.Generate2DColliders();
+//	public void Generate2DColliders() {
+//
+//		EdgeCollider2D[] currentColliders = gameObject.GetComponents<EdgeCollider2D>();
+//		for (int i = 0; i < currentColliders.Length; i++) {
+//			Destroy(currentColliders[i]);
+//		}
+//
+//		CalculateMeshOutlines();
+//
+//		foreach (List<int> outline in outlines) {
+//			EdgeCollider2D edgeCollider2D = gameObject.AddComponent<EdgeCollider2D>();
+//			Vector2[] edgePoints = new Vector2[outline.Count];
+//
+//			for (int i = 0; i < outline.Count; i++) {
+//				edgePoints[i] = new Vector2(vertices[outline[i]].x, vertices[outline[i]].z);
+//			}
+//			edgeCollider2D.points = edgePoints;
+//		}
+//	}
+
 //		}
 
 		//if (drawMode == DrawMode.threeD) {
@@ -44,7 +63,7 @@ public class CavePreview : MonoBehaviour
 
     }
 	//This will draw all the required meshes for the cave
-    public void DrawCaveMesh(Mesh meshData)
+    public void DrawCaveMesh(CaveMesh meshData)
 	{
 		caveMeshFilter.sharedMesh = meshData;
 		caveMeshRenderer.gameObject.SetActive (true);
