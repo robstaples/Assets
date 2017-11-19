@@ -5,19 +5,7 @@ using UnityEngine;
 
 public class CaveGenerator : MonoBehaviour {
 
-	public int width;
-	public int height;
-
-	public string seed;
-	public bool useRandomSeed;
-
-	[Range (40,50)]
-	public int randomFillPercent;
-
-	[Header ("Advanced")]
-	public int border = 1;
-	public int passageWidth = 3;
-	public int smooth = 5;
+	CaveSettings caveSettings;
 
 	int[,] map;
 
@@ -32,18 +20,21 @@ public class CaveGenerator : MonoBehaviour {
 		}
 	}
 
-	public int[,] GenerateMap() {
-		map = new int[width, height];
+	public int[,] GenerateMap(CaveSettings _caveSettings) {
+
+		caveSettings = _caveSettings;
+
+		map = new int[caveSettings.width, caveSettings.height];
 		RandomFillMap();
 
-		for (int i = 0; i < smooth; i++) {
+		for (int i = 0; i < caveSettings.smooth; i++) {
 			SmoothMap();
 		}
 
 		ProcessMap();
 
-		int borderSize = border;
-		int[,] borderedMap = new int[width + borderSize * 2, height + borderSize * 2];
+		//Add this processing to CaveSettings {Refactor}
+		int[,] borderedMap = new int[caveSettings.width + caveSettings.borderSize * 2, caveSettings.height + caveSettings.borderSize * 2];
 
 		for (int x = 0; x < borderedMap.GetLength(0); x++) {
 			for (int y = 0; y < borderedMap.GetLength(1); y++) {
@@ -55,7 +46,7 @@ public class CaveGenerator : MonoBehaviour {
 				}
 			}
 		}
-		return map;
+		return borderedMap;
 	}
 
 	void ProcessMap() {

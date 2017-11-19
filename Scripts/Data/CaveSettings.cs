@@ -14,7 +14,7 @@ public class CaveSettings : UpdatableData
   	public int randomFillPercent;
 
   	[Header ("Advanced")]
-  	public int border = 1;
+  	public int borderSize = 1;
   	public int passageWidth = 3;
   	public int smooth = 5;
 
