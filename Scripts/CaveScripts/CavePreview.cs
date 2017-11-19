@@ -6,6 +6,7 @@ public class CavePreview : MonoBehaviour {
 
     public CaveMesh caveMesh;
     public MeshFilter caveMeshFilter;
+    public MeshRenderer caveMeshRenderer;
 
     public MeshFilter wallMeshFilter;
     public MeshRenderer wallMeshRenderer;
@@ -17,14 +18,13 @@ public class CavePreview : MonoBehaviour {
     public Material wallMaterial;
     public Material groundMaterial;
 
+    public CaveSettings caveSettings;
+
 	float squareSize = 1;
-	int[,] map;
 
     public void DrawMapInEditor() {
 
-    map = CaveGenerator.GenerateMap();
-
-		caveMesh = new CaveMesh(map, squareSize);
+		caveMesh = new CaveMesh(squareSize, caveSettings);
 
 		DrawCaveMesh(caveMesh);
 
@@ -42,7 +42,7 @@ public class CavePreview : MonoBehaviour {
         Mesh wMesh = new Mesh();
         wMesh.vertices = caveMesh.wallCaveMesh.vertices.ToArray();
         wMesh.triangles = caveMesh.wallCaveMesh.triangles.ToArray();
-        wMesh.uv = caveMesh.wallCaveMesh.uvs.ToArray();
+        wMesh.uv = caveMesh.wallCaveMesh.uvs;
         wMesh.RecalculateNormals();
         wallMeshFilter.sharedMesh = wMesh;
         wallMeshRenderer.gameObject.SetActive (true);

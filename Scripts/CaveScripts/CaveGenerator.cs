@@ -5,22 +5,22 @@ using UnityEngine;
 
 public class CaveGenerator : MonoBehaviour {
 
-	CaveSettings caveSettings;
+	public CaveSettings caveSettings;
 
 	int[,] map;
 
 	void Start() {
-		GenerateMap();
+		GenerateMap(caveSettings);
 	}
 
 	//Need to have a look at changing this {Refactor}
 	void Update() {
 		if (Input.GetMouseButtonDown (0)) {
-			GenerateMap();
+			GenerateMap(caveSettings);
 		}
 	}
 
-	public int[,] GenerateMap(CaveSettings _caveSettings) {
+	public void GenerateMap(CaveSettings _caveSettings) {
 
 		caveSettings = _caveSettings;
 
@@ -38,15 +38,15 @@ public class CaveGenerator : MonoBehaviour {
 
 		for (int x = 0; x < borderedMap.GetLength(0); x++) {
 			for (int y = 0; y < borderedMap.GetLength(1); y++) {
-				if (x>= borderSize && x < width + borderSize && y >= borderSize && y < height + borderSize) {
-					borderedMap[x,y] = map[x-borderSize,y-borderSize];
+				if (x>= caveSettings.borderSize && x < caveSettings.width + caveSettings.borderSize && y >= caveSettings.borderSize && y < caveSettings.height + caveSettings.borderSize) {
+					borderedMap[x,y] = map[x- caveSettings.borderSize,y- caveSettings.borderSize];
 				}
 				else {
 					borderedMap[x,y] = 1;
 				}
 			}
 		}
-		return borderedMap;
+        map = borderedMap;
 	}
 
 	void ProcessMap() {
@@ -162,7 +162,7 @@ public class CaveGenerator : MonoBehaviour {
 
 		List<Coord> line = GetLine(tileA, tileB);
 		foreach (Coord c in line) {
-			DrawCircle(c,passageWidth);
+			DrawCircle(c, caveSettings.passageWidth);
 		}
 	}
 
@@ -228,15 +228,15 @@ public class CaveGenerator : MonoBehaviour {
 	}
 
 	Vector3 CoordToWorldPoint(Coord tile) {
-		return new Vector3(-width/2+.5f + tile.tileX, 2, -height/2+.5f+tile.tileY);
+		return new Vector3(-caveSettings.width /2+.5f + tile.tileX, 2, -caveSettings.height /2+.5f+tile.tileY);
 	}
 
 	List<List<Coord>> GetRegions(int tileType) {
 		List<List<Coord>> regions = new List<List<Coord>>();
-		int[,] mapFlags = new int[width,height];
+		int[,] mapFlags = new int[caveSettings.width, caveSettings.height];
 
-		for (int x = 0; x < width; x++) {
-			for (int y = 0; y < height; y++) {
+		for (int x = 0; x < caveSettings.width; x++) {
+			for (int y = 0; y < caveSettings.height; y++) {
 				if (mapFlags[x,y] == 0 && map[x,y] == tileType) {
 					List<Coord> newRegion = GetRegionTiles(x,y);
 					regions.Add(newRegion);
@@ -251,7 +251,7 @@ public class CaveGenerator : MonoBehaviour {
 
 	List<Coord> GetRegionTiles(int startX, int startY) {
 		List<Coord> tiles = new List<Coord>();
-		int[,] mapFlags = new int[width,height];
+		int[,] mapFlags = new int[caveSettings.width, caveSettings.height];
 		int tileType = map[startX,startY];
 
 		Queue<Coord> queue = new Queue<Coord>();
@@ -277,31 +277,31 @@ public class CaveGenerator : MonoBehaviour {
 	}
 
 	bool IsInMapRange(int x, int y) {
-			return x >= 0 && x < width && y >= 0 && y < height;
+			return x >= 0 && x < caveSettings.width && y >= 0 && y < caveSettings.height;
 	}
 
 	void RandomFillMap(){
-		if (useRandomSeed) {
-			seed = Time.time.ToString ();
+		if (caveSettings.useRandomSeed) {
+            caveSettings.seed = Time.time.ToString ();
 		}
-		System.Random psuedoRandom = new System.Random (seed.GetHashCode ());
+		System.Random psuedoRandom = new System.Random (caveSettings.seed.GetHashCode ());
 
-		for (int x = 0; x < width; x++) {
-			for (int y = 0; y < height; y++) {
-				if (x == 0 || x == width -1 || y == 0 || y == height - 1)
+		for (int x = 0; x < caveSettings.width; x++) {
+			for (int y = 0; y < caveSettings.height; y++) {
+				if (x == 0 || x == caveSettings.width -1 || y == 0 || y == caveSettings.height - 1)
 				{
 					map [x, y] = 1;
 				}
 				else {
-					map [x, y] = (psuedoRandom.Next (0, 100) < randomFillPercent) ? 1 : 0;
+					map [x, y] = (psuedoRandom.Next (0, 100) < caveSettings.randomFillPercent) ? 1 : 0;
 				}
 			}
 		}
 	}
 
 	void SmoothMap() {
-		for (int x = 0; x < width; x++) {
-			for (int y = 0; y < height; y++) {
+		for (int x = 0; x < caveSettings.width; x++) {
+			for (int y = 0; y < caveSettings.height; y++) {
 				int neighourWallTiles = GetSurroundingWallCount (x, y);
 
 				if (neighourWallTiles > 4)

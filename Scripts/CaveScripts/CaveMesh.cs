@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -16,23 +17,26 @@ public class CaveMesh {
 	public SquareGrid squareGrid;
 	public WallCaveMesh wallCaveMesh;
 	public GroundCaveMesh groundCaveMesh;
+    CaveSettings caveSettings;
 
+    public CaveMesh(float _squareSize, CaveSettings _caveSettings) {
 
-	public CaveMesh(int[,] _map, float _squareSize) {
+        squareSize = _squareSize;
+        caveSettings = _caveSettings;
 
-		map = _map;
-		squareSize = _squareSize;
-
-		vertices = new List<Vector3>();
+        map = new int[caveSettings.width, caveSettings.height];
+        vertices = new List<Vector3>();
 		triangles = new List<int>();
 		checkedVertices = new HashSet<int>();
 		outlines = new List<List<int>>();
-		triangleDictionary = new Dictionary<int, List<Triangle>> ();
+        triangleDictionary = new Dictionary<int, List<Triangle>>();
 
-		AddVertices();
+        GenerateMap();
+
+        AddVertices();
 		AddUVs();
 
-		wallCaveMesh = new WallCaveMesh(map, squareSize, triangleDictionary, outlines, checkedVertices);
+		wallCaveMesh = new WallCaveMesh(vertices, map, triangleDictionary, outlines, checkedVertices);
 		groundCaveMesh = new GroundCaveMesh(map, squareSize);
 	}
 
@@ -162,6 +166,467 @@ public class CaveMesh {
 			triangleDictionary.Add(vertexIndexKey, triangleList);
 		}
 	}
+
+    public void GenerateMap()
+    {
+        RandomFillMap();
+
+        for (int i = 0; i < caveSettings.smooth; i++)
+        {
+            SmoothMap();
+        }
+
+        ProcessMap();
+
+        int[,] borderedMap = new int[caveSettings.width + caveSettings.borderSize * 2, caveSettings.height + caveSettings.borderSize * 2];
+
+        for (int x = 0; x < borderedMap.GetLength(0); x++)
+        {
+            for (int y = 0; y < borderedMap.GetLength(1); y++)
+            {
+                if (x >= caveSettings.borderSize && x < caveSettings.width + caveSettings.borderSize && y >= caveSettings.borderSize && y < caveSettings.height + caveSettings.borderSize)
+                {
+                    borderedMap[x, y] = map[x - caveSettings.borderSize, y - caveSettings.borderSize];
+                }
+                else
+                {
+                    borderedMap[x, y] = 1;
+                }
+            }
+        }
+        map = borderedMap;
+    }
+
+    void ProcessMap()
+    {
+        List<List<Coord>> wallRegions = GetRegions(1);
+
+        //make public
+        int wallThreasholdSize = 50;
+        foreach (List<Coord> wallRegion in wallRegions)
+        {
+            if (wallRegion.Count < wallThreasholdSize)
+            {
+                foreach (Coord tile in wallRegion)
+                {
+                    map[tile.tileX, tile.tileY] = 0;
+                }
+            }
+        }
+
+        List<List<Coord>> roomRegions = GetRegions(0);
+
+        int roomThreasholdSize = 50;
+        List<Room> survivingRooms = new List<Room>();
+
+        foreach (List<Coord> roomRegion in roomRegions)
+        {
+            if (roomRegion.Count < roomThreasholdSize)
+            {
+                foreach (Coord tile in roomRegion)
+                {
+                    map[tile.tileX, tile.tileY] = 1;
+                }
+            }
+            else
+            {
+                survivingRooms.Add(new Room(roomRegion, map));
+            }
+        }
+        survivingRooms.Sort();
+
+
+        survivingRooms[0].isMainRoom = true;
+        survivingRooms[0].isAccessibleFromMainRoom = true;
+
+        ConnectClosestRooms(survivingRooms);
+    }
+
+    void ConnectClosestRooms(List<Room> allRooms, bool forceAccessibilityFromMainRoom = false)
+    {
+
+        List<Room> roomListA = new List<Room>();
+        List<Room> roomListB = new List<Room>();
+
+        if (forceAccessibilityFromMainRoom)
+        {
+            foreach (Room room in allRooms)
+            {
+                if (room.isAccessibleFromMainRoom)
+                {
+                    roomListB.Add(room);
+                }
+                else
+                {
+                    roomListA.Add(room);
+                }
+            }
+        }
+        else
+        {
+            roomListA = allRooms;
+            roomListB = allRooms;
+        }
+
+        int bestDistance = 0;
+        Coord bestTileA = new Coord();
+        Coord bestTileB = new Coord();
+        Room bestRoomA = new Room();
+        Room bestRoomB = new Room();
+        bool possibleConnectionFound = false;
+
+        foreach (Room roomA in roomListA)
+        {
+            if (!forceAccessibilityFromMainRoom)
+            {
+                possibleConnectionFound = false;
+                if (roomA.connectedRooms.Count > 0)
+                {
+                    continue;
+                }
+            }
+
+            foreach (Room roomB in roomListB)
+            {
+                if (roomA == roomB || roomA.IsConnected(roomB))
+                {
+                    continue;
+                }
+
+                for (int tileIndexA = 0; tileIndexA < roomA.edgeTiles.Count; tileIndexA++)
+                {
+                    for (int tileIndexB = 0; tileIndexB < roomB.edgeTiles.Count; tileIndexB++)
+                    {
+                        Coord tileA = roomA.edgeTiles[tileIndexA];
+                        Coord tileB = roomB.edgeTiles[tileIndexB];
+                        int distanceBetweenRooms = (int)(Mathf.Pow(tileA.tileX - tileB.tileX, 2) + Mathf.Pow(tileA.tileY - tileB.tileY, 2));
+
+                        if (distanceBetweenRooms < bestDistance || !possibleConnectionFound)
+                        {
+                            bestDistance = distanceBetweenRooms;
+                            possibleConnectionFound = true;
+                            bestTileA = tileA;
+                            bestTileB = tileB;
+                            bestRoomA = roomA;
+                            bestRoomB = roomB;
+                        }
+                    }
+                }
+            }
+            if (possibleConnectionFound && !forceAccessibilityFromMainRoom)
+            {
+                CreatePassage(bestRoomA, bestRoomB, bestTileA, bestTileB);
+            }
+        }
+
+        if (possibleConnectionFound && forceAccessibilityFromMainRoom)
+        {
+            CreatePassage(bestRoomA, bestRoomB, bestTileA, bestTileB);
+            ConnectClosestRooms(allRooms, true);
+        }
+
+        if (!forceAccessibilityFromMainRoom)
+        {
+            ConnectClosestRooms(allRooms, true);
+        }
+    }
+
+    void CreatePassage(Room roomA, Room roomB, Coord tileA, Coord tileB)
+    {
+        Room.ConnectRooms(roomA, roomB);
+
+        List<Coord> line = GetLine(tileA, tileB);
+        foreach (Coord c in line)
+        {
+            DrawCircle(c, caveSettings.passageWidth);
+        }
+    }
+
+    void DrawCircle(Coord c, int r)
+    {
+        for (int x = -r; x <= r; x++)
+        {
+            for (int y = -r; y <= r; y++)
+            {
+                if (x * x + y * y <= r * r)
+                {
+                    int realX = c.tileX + x;
+                    int realY = c.tileY + y;
+                    if (IsInMapRange(realX, realY))
+                    {
+                        map[realX, realY] = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    List<Coord> GetLine(Coord from, Coord to)
+    {
+        List<Coord> line = new List<Coord>();
+
+        int x = from.tileX;
+        int y = from.tileY;
+
+        int dx = to.tileX - from.tileX;
+        int dy = to.tileY - from.tileY;
+
+        bool inverted = false;
+        int step = Math.Sign(dx);
+        int gradientStep = Math.Sign(dy);
+
+        int longest = Mathf.Abs(dx);
+        int shortest = Mathf.Abs(dy);
+
+        if (longest < shortest)
+        {
+            inverted = true;
+            longest = Mathf.Abs(dy);
+            shortest = Mathf.Abs(dx);
+
+            step = Math.Sign(dy);
+            gradientStep = Math.Sign(dx);
+        }
+
+        int gradientAccumulation = longest / 2;
+        for (int i = 0; i < longest; i++)
+        {
+            line.Add(new Coord(x, y));
+
+            if (inverted)
+                y += step;
+            else
+                x += step;
+
+            gradientAccumulation += shortest;
+            if (gradientAccumulation >= longest)
+            {
+                if (inverted)
+                    x += gradientStep;
+                else
+                    y += gradientStep;
+
+                gradientAccumulation -= longest;
+            }
+        }
+        return line;
+    }
+
+    Vector3 CoordToWorldPoint(Coord tile)
+    {
+        return new Vector3(-caveSettings.width / 2 + .5f + tile.tileX, 2, -caveSettings.height / 2 + .5f + tile.tileY);
+    }
+
+    List<List<Coord>> GetRegions(int tileType)
+    {
+        List<List<Coord>> regions = new List<List<Coord>>();
+        int[,] mapFlags = new int[caveSettings.width, caveSettings.height];
+
+        for (int x = 0; x < caveSettings.width; x++)
+        {
+            for (int y = 0; y < caveSettings.height; y++)
+            {
+                if (mapFlags[x, y] == 0 && map[x, y] == tileType)
+                {
+                    List<Coord> newRegion = GetRegionTiles(x, y);
+                    regions.Add(newRegion);
+                    foreach (Coord tile in newRegion)
+                    {
+                        mapFlags[tile.tileX, tile.tileY] = 1;
+                    }
+                }
+            }
+        }
+        return regions;
+    }
+
+    List<Coord> GetRegionTiles(int startX, int startY)
+    {
+        List<Coord> tiles = new List<Coord>();
+        int[,] mapFlags = new int[caveSettings.width, caveSettings.height];
+        int tileType = map[startX, startY];
+
+        Queue<Coord> queue = new Queue<Coord>();
+        queue.Enqueue(new Coord(startX, startY));
+        mapFlags[startX, startY] = 1;
+
+        while (queue.Count > 0)
+        {
+            Coord tile = queue.Dequeue();
+            tiles.Add(tile);
+
+            for (int x = tile.tileX - 1; x <= tile.tileX + 1; x++)
+            {
+                for (int y = tile.tileY - 1; y <= tile.tileY + 1; y++)
+                {
+                    if (IsInMapRange(x, y) && (y == tile.tileY || x == tile.tileX))
+                    {
+                        if (mapFlags[x, y] == 0 && map[x, y] == tileType)
+                        {
+                            mapFlags[x, y] = 1;
+                            queue.Enqueue(new Coord(x, y));
+                        }
+                    }
+                }
+            }
+        }
+        return tiles;
+    }
+
+    bool IsInMapRange(int x, int y)
+    {
+        return x >= 0 && x < caveSettings.width && y >= 0 && y < caveSettings.height;
+    }
+
+    void RandomFillMap()
+    {
+        if (caveSettings.useRandomSeed)
+        {
+            caveSettings.seed = Time.time.ToString();
+        }
+        System.Random psuedoRandom = new System.Random(caveSettings.seed.GetHashCode());
+
+        for (int x = 0; x < caveSettings.width; x++)
+        {
+            for (int y = 0; y < caveSettings.height; y++)
+            {
+                if (x == 0 || x == caveSettings.width - 1 || y == 0 || y == caveSettings.height - 1)
+                {
+                    map[x, y] = 1;
+                }
+                else
+                {
+                    map[x, y] = (psuedoRandom.Next(0, 100) < caveSettings.randomFillPercent) ? 1 : 0;
+                }
+            }
+        }
+    }
+
+    void SmoothMap()
+    {
+        for (int x = 0; x < caveSettings.width; x++)
+        {
+            for (int y = 0; y < caveSettings.height; y++)
+            {
+                int neighourWallTiles = GetSurroundingWallCount(x, y);
+
+                if (neighourWallTiles > 4)
+                    map[x, y] = 1;
+                else if (neighourWallTiles < 4)
+                    map[x, y] = 0;
+            }
+        }
+    }
+
+    int GetSurroundingWallCount(int gridX, int gridY)
+    {
+        int wallCount = 0;
+        for (int neighbourX = gridX - 1; neighbourX <= gridX + 1; neighbourX++)
+        {
+            for (int neighbourY = gridY - 1; neighbourY <= gridY + 1; neighbourY++)
+            {
+                if (IsInMapRange(neighbourX, neighbourY))
+                {
+                    if (neighbourX != gridX || neighbourY != gridY)
+                    {
+                        wallCount += map[neighbourX, neighbourY];
+                    }
+                }
+                else
+                {
+                    wallCount++;
+                }
+            }
+        }
+        return wallCount;
+    }
+
+    struct Coord
+    {
+        public int tileX;
+        public int tileY;
+
+        public Coord(int x, int y)
+        {
+            tileX = x;
+            tileY = y;
+        }
+    }
+
+    class Room : IComparable<Room>
+    {
+        public List<Coord> tiles;
+        public List<Coord> edgeTiles;
+        public List<Room> connectedRooms;
+        public int roomSize;
+        public bool isAccessibleFromMainRoom;
+        public bool isMainRoom;
+
+        public Room()
+        {
+
+        }
+
+        public Room(List<Coord> roomTiles, int[,] map)
+        {
+            tiles = roomTiles;
+            roomSize = tiles.Count;
+            connectedRooms = new List<Room>();
+
+            edgeTiles = new List<Coord>();
+            foreach (Coord tile in tiles)
+            {
+                for (int x = tile.tileX - 1; x <= tile.tileX + 1; x++)
+                {
+                    for (int y = tile.tileY - 1; y <= tile.tileY + 1; y++)
+                    {
+                        if (x == tile.tileX || y == tile.tileY)
+                        {
+                            if (map[x, y] == 1)
+                            {
+                                edgeTiles.Add(tile);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void SetAccessibleFromMainRoom()
+        {
+            if (!isAccessibleFromMainRoom)
+            {
+                isAccessibleFromMainRoom = true;
+                foreach (Room connectedRoom in connectedRooms)
+                {
+                    connectedRoom.SetAccessibleFromMainRoom();
+                }
+            }
+        }
+
+        public static void ConnectRooms(Room roomA, Room roomB)
+        {
+            if (roomA.isAccessibleFromMainRoom)
+            {
+                roomB.SetAccessibleFromMainRoom();
+            }
+            else if (roomB.isAccessibleFromMainRoom)
+            {
+                roomA.SetAccessibleFromMainRoom();
+            }
+            roomA.connectedRooms.Add(roomB);
+            roomB.connectedRooms.Add(roomA);
+        }
+        public bool IsConnected(Room otherRoom)
+        {
+            return connectedRooms.Contains(otherRoom);
+        }
+
+        public int CompareTo(Room otherRoom)
+        {
+            return otherRoom.roomSize.CompareTo(roomSize);
+        }
+    }
 }
 public class SquareGrid {
 	public Square[,] squares;
@@ -250,46 +715,45 @@ public class ControlNode : Node {
 public class WallCaveMesh {
 	public List<Vector3> vertices;
 	public List<int> triangles;
-	public List<Vector2> uvs;
+	public Vector2[] uvs;
 	float wallHeight = 5;
-	int[,] map;
-	float squareSize;
 
 	Dictionary<int, List<Triangle>> triangleDictionary;
 	List<List<int>> outlines;
 	HashSet<int> checkedVertices;
 
-	public WallCaveMesh(int[,] _map, float _squareSize, Dictionary<int, List<Triangle>> _triangleDictionary, List<List<int>> _outlines, HashSet<int> _checkedVertices) {
+    public List<Vector3> caveVertices;
+
+    public WallCaveMesh(List<Vector3> _caveVertices, int[,]_map,  Dictionary<int, List<Triangle>> _triangleDictionary, List<List<int>> _outlines, HashSet<int> _checkedVertices) {
 
 		vertices = new List<Vector3>();
 		triangles = new List<int>();
-		uvs = new List<Vector2>();
+        caveVertices = _caveVertices;
 
-		map = _map;
-		squareSize = _squareSize;
-
-		triangleDictionary = _triangleDictionary;
+        triangleDictionary = _triangleDictionary;
 		outlines = _outlines;
 		checkedVertices = _checkedVertices;
-	}
 
-	void CreateWallMesh(int[,] map, Mesh caveMesh) {
+        CreateWallMesh(_map);
+
+    }
+
+	void CreateWallMesh(int[,] map) {
 
 		CalculateMeshOutlines();
 
 		List<Vector3> wallVertices = new List<Vector3>();
 		List<int> wallTriangles = new List<int>();
-		Mesh wallMesh = new Mesh();
 		Vector2[] wallUvs;
 
 		foreach (List<int> outline in outlines) {
 			for (int i = 0; i < outline.Count -1; i++) {
 				int startIndex = wallVertices.Count;
 
-				wallVertices.Add(vertices[outline[i]]); //left
-				wallVertices.Add(vertices[outline[i + 1]]); //right
-				wallVertices.Add(vertices[outline[i]] - Vector3.up * wallHeight); //bottomleft
-				wallVertices.Add(vertices[outline[i + 1]]  - Vector3.up * wallHeight); //bottomright
+				wallVertices.Add(caveVertices[outline[i]]); //left
+				wallVertices.Add(caveVertices[outline[i + 1]]); //right
+				wallVertices.Add(caveVertices[outline[i]] - Vector3.up * wallHeight); //bottomleft
+				wallVertices.Add(caveVertices[outline[i + 1]]  - Vector3.up * wallHeight); //bottomright
 
 				wallTriangles.Add(startIndex + 0);
 				wallTriangles.Add(startIndex + 2);
@@ -309,9 +773,9 @@ public class WallCaveMesh {
 			wallUvs[i] = new Vector2(percentX, percentY);
 		}
 
-		wallMesh.vertices = wallVertices.ToArray();
-		wallMesh.triangles = wallTriangles.ToArray();
-		wallMesh.uv = wallUvs;
+		vertices = wallVertices;
+		triangles = wallTriangles;
+        uvs = wallUvs;
 	}
 	void CalculateMeshOutlines() {
 		for (int vertexIndex = 0; vertexIndex < vertices.Count; vertexIndex++) {
