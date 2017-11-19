@@ -6,8 +6,6 @@ public class CavePreview : MonoBehaviour {
 
     public CaveMesh caveMesh;
     public MeshFilter caveMeshFilter;
-    public MeshRenderer caveMeshRenderer;
-
 
     public MeshFilter wallMeshFilter;
     public MeshRenderer wallMeshRenderer;
@@ -36,19 +34,19 @@ public class CavePreview : MonoBehaviour {
 	{
     Mesh cMesh = new Mesh();
     cMesh.vertices = caveMesh.vertices.ToArray();
-	cMesh.triangles = caveMesh.triangles.ToArray();
+	  cMesh.triangles = caveMesh.triangles.ToArray();
     cMesh.uv = caveMesh.uvs;
     cMesh.RecalculateNormals();
-	caveMeshFilter.sharedMesh = cMesh;
-	caveMeshRenderer.gameObject.SetActive (true);
+	  caveMeshFilter.sharedMesh = cMesh;
+    caveMeshRenderer.gameObject.SetActive (true);
 
     Mesh wMesh = new Mesh();
     wMesh.vertices = caveMesh.wallCaveMesh.vertices.ToArray();
     wMesh.triangles = caveMesh.wallCaveMesh.triangles.ToArray();
-	wMesh.uv = caveMesh.wallCaveMesh.uvs.ToArray();
+	  wMesh.uv = caveMesh.wallCaveMesh.uvs.ToArray();
     wMesh.RecalculateNormals();
     wallMeshFilter.sharedMesh = wMesh;
-	wallMeshRenderer.gameObject.SetActive (true);
+	  wallMeshRenderer.gameObject.SetActive (true);
 
     Mesh gMesh = new Mesh();
     gMesh.vertices = caveMesh.groundCaveMesh.vertices;
