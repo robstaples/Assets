@@ -32,7 +32,7 @@ public class CaveGenerator : MonoBehaviour {
 		}
 	}
 
-	void GenerateMap() {
+	public int[,] GenerateMap() {
 		map = new int[width, height];
 		RandomFillMap();
 
@@ -55,6 +55,7 @@ public class CaveGenerator : MonoBehaviour {
 				}
 			}
 		}
+		return map;
 	}
 
 	void ProcessMap() {

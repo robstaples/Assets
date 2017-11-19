@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class CaveMesh {
-	List<Vector3> vertices;
-	List<int> triangles;
-	Vector2[] uvs;
+	public List<Vector3> vertices;
+	public List<int> triangles;
+	public Vector2[] uvs;
 	int[,] map;
 	float squareSize;
 
@@ -248,9 +248,9 @@ public class ControlNode : Node {
 	}
 }
 public class WallCaveMesh {
-	List<Vector3> vertices;
-	List<int> triangles;
-	List<Vector2> uvs;
+	public List<Vector3> vertices;
+	public List<int> triangles;
+	public List<Vector2> uvs;
 	float wallHeight = 5;
 	int[,] map;
 	float squareSize;
@@ -373,16 +373,15 @@ public class WallCaveMesh {
 }
 
 public class GroundCaveMesh {
-	Vector3[] vertices;
-	int[] triangles;
-	Vector2[] uvs;
+	public Vector3[] vertices;
+	public int[] triangles;
+	public Vector2[] uvs;
 	int width;
 	int height;
-	int squareSize;
+	float squareSize;
 	float wallHeight = 5;
 
-	public GroundCaveMesh(int[,] _map, int _squareSize) {
-		Vector3[] vertices = new Vector3[map.GetLength(0), map.GetLength(1)];
+	public GroundCaveMesh(int[,] _map, float _squareSize) {
 		squareSize = _squareSize;
 		width = _map.GetLength(0);
 		height = _map.GetLength(1);
@@ -396,7 +395,7 @@ public class GroundCaveMesh {
 	void GroundVertices () {
 
 		vertices = new Vector3 [(width + 1) * (height + 1)];
-		for (int y = 0, i = 0; y <= map.GetLength(1); y++) {
+		for (int y = 0, i = 0; y <= height; y++) {
 			for (int x = 0; x <= width; x++, i++) {
 				//Changed Vector position
 				vertices[i] = new Vector3 (-width/2 + x * squareSize + squareSize/2, -wallHeight/2, -height/2 + y * squareSize + squareSize/2);
@@ -410,22 +409,21 @@ public class GroundCaveMesh {
 		for (int ti = 0, vi = 0, y =0; y < height; y++, vi ++) {
 			for (int x = 0; x < width; x++, ti +=6, vi++) {
 				triangles [ti] = vi;
-				triangles [ti + 3] = groundTriangles [ti + 2] = vi + 1;
-				triangles [ti + 4] = groundTriangles [ti + 1] = vi + width + 1;
+				triangles [ti + 3] = triangles [ti + 2] = vi + 1;
+				triangles [ti + 4] = triangles [ti + 1] = vi + width + 1;
 				triangles [ti + 5] = vi + width + 2;
 			}
 		}
 	}
 
 	void GroundUVS () {
-		//This should be a variable in the Editor {Refactor}
 		int tileAmount = 10;
 		//Create a method or struct to calculate UV's for all methods {Refactor}
-		groundUvs = new Vector2[groundVertices.Length];
-		for (int i = 0; i < groundVertices.Length; i++) {
-			float	percentX = Mathf.InverseLerp(-width/2, width/2, groundVertices[i].x) * tileAmount;
-			float	percentY = Mathf.InverseLerp(-width/2, width/2, groundVertices[i].z) * tileAmount;
-			groundUvs[i] = new Vector2(percentX, percentY);
+		uvs = new Vector2[vertices.Length];
+		for (int i = 0; i < vertices.Length; i++) {
+			float	percentX = Mathf.InverseLerp(-width/2, width/2, vertices[i].x) * tileAmount;
+			float	percentY = Mathf.InverseLerp(-width/2, width/2, vertices[i].z) * tileAmount;
+			uvs[i] = new Vector2(percentX, percentY);
 		}
 	}
 }

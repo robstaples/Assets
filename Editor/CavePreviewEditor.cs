@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using UnityEditor;
 
-[CustomEditor(typeof(MapPreview))]
+[CustomEditor(typeof(CavePreview))]
 public class CavePreviewEditor : Editor
 {
   public override void OnInspectorGUI()

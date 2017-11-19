@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Collections;
 using UnityEditor;
-﻿using UnityEngine;
+using UnityEngine;
 
 [CustomEditor (typeof (ShapeCreator))]
 public class ShapeEditor : Editor{
@@ -10,12 +10,12 @@ public class ShapeEditor : Editor{
   bool needsRepaint;
 
   void onSceneGUI() {
-    Event guiEvent = Event.Current;
+    Event guiEvent = Event.current;
 
     if (guiEvent.type == EventType.Repaint) {
       Draw();
     } else if (guiEvent.type == EventType.layout) {
-      HandleUtility.AddDefultcontorl(GUI.GetControlId(FocusType.Passive));
+      HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
     } else {
       HandleInput(guiEvent);
       if (needsRepaint) {
@@ -30,8 +30,8 @@ public class ShapeEditor : Editor{
     float dstToDrawPlane = (drawPlaneHeight - mouseRay.origin.y)/mouseRay.direction.y;
     Vector3 mousePosition = mouseRay.GetPoint(dstToDrawPlane);
 
-    if (guiEvent.type == EventType.mouseDown && guiEvent.button == 0 && guiEvent.modifiers == EventModifiers.none) {
-      Undo.RecordObject(ShapeCreator, "Add Point");
+    if (guiEvent.type == EventType.mouseDown && guiEvent.button == 0 && guiEvent.modifiers == EventModifiers.None) {
+      Undo.RecordObject(shapeCreator, "Add Point");
       shapeCreator.points.Add(mousePosition);
       needsRepaint = true;
     }
@@ -40,9 +40,9 @@ public class ShapeEditor : Editor{
   void Draw() {
     for (int i = 0; i< shapeCreator.points.Count; i++) {
       Vector3 nextPoint = shapeCreator.points[(i + 1)  % shapeCreator.points.Count];
-      Handles.Color = Color.Black;
+      Handles.color = Color.black;
       Handles.DrawDottedLine(shapeCreator.points[i], nextPoint, 4);
-      Handles.Color = Color.White;
+      Handles.color = Color.white;
       Handles.DrawSolidDisc(shapeCreator.points[i], Vector3.up, .5f);
       needsRepaint = false;
     }
