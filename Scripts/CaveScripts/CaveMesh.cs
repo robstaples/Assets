@@ -716,10 +716,10 @@ public class WallCaveMesh {
 	public List<Vector3> vertices;
 	public List<int> triangles;
 	public Vector2[] uvs;
-	float wallHeight = 5;
+	float wallHeight = 3;
 
 	Dictionary<int, List<Triangle>> triangleDictionary;
-	List<List<int>> outlines;
+	public List<List<int>> outlines;
 	HashSet<int> checkedVertices;
 
     public List<Vector3> caveVertices;
@@ -728,7 +728,7 @@ public class WallCaveMesh {
 
 		vertices = new List<Vector3>();
 		triangles = new List<int>();
-        List<List<int>> outlines = new List<List<int>>();
+        outlines = new List<List<int>>();
 
         caveVertices = _caveVertices;
         triangleDictionary = _triangleDictionary;
@@ -739,14 +739,14 @@ public class WallCaveMesh {
     }
 
 	void CreateWallMesh(int[,] map) {
-
-		CalculateMeshOutlines();
+        CalculateMeshOutlines();
 
 		List<Vector3> wallVertices = new List<Vector3>();
-		List<int> wallTriangles = new List<int>();
+        List<int> wallTriangles = new List<int>();
 		Vector2[] wallUvs;
+        
 
-		foreach (List<int> outline in outlines) {
+        foreach (List<int> outline in outlines) {
 			for (int i = 0; i < outline.Count -1; i++) {
 				int startIndex = wallVertices.Count;
 
@@ -755,7 +755,7 @@ public class WallCaveMesh {
 				wallVertices.Add(caveVertices[outline[i]] - Vector3.up * wallHeight); //bottomleft
 				wallVertices.Add(caveVertices[outline[i + 1]]  - Vector3.up * wallHeight); //bottomright
 
-				wallTriangles.Add(startIndex + 0);
+                wallTriangles.Add(startIndex + 0);
 				wallTriangles.Add(startIndex + 2);
 				wallTriangles.Add(startIndex + 3);
 
@@ -765,20 +765,17 @@ public class WallCaveMesh {
 			}
 		}
 
-		int tileAmount = 10;
-		wallUvs = new Vector2[wallVertices.Count];
-		for (int i = 0; i < wallVertices.Count; i++) {
-			float	percentX = Mathf.InverseLerp(-map.GetLength(1)/2, -map.GetLength(1)/2, wallVertices[i].x) * tileAmount;
-			float	percentY = Mathf.InverseLerp(-map.GetLength(0)/2, -map.GetLength(0)/2, wallVertices[i].z) * tileAmount;
-			wallUvs[i] = new Vector2(percentX, percentY);
-		}
+        wallUvs = new Vector2[wallVertices.Count];
+        for (int i = 0; i < wallVertices.Count; i++) {
+            wallUvs[i] = new Vector2(wallVertices[i].y, wallVertices[i].z);
+        }
 
 		vertices = wallVertices;
 		triangles = wallTriangles;
         uvs = wallUvs;
 	}
 	void CalculateMeshOutlines() {
-		for (int vertexIndex = 0; vertexIndex < vertices.Count; vertexIndex++) {
+		for (int vertexIndex = 0; vertexIndex < caveVertices.Count; vertexIndex++) {
 			if (!checkedVertices.Contains(vertexIndex)) {
 				int newOutlineVertex = GetConnectedOutlineVertex(vertexIndex);
 				if (newOutlineVertex != -1) {
@@ -843,12 +840,12 @@ public class GroundCaveMesh {
 	int width;
 	int height;
 	float squareSize;
-	float wallHeight = 5;
+	float wallHeight = 3;
 
 	public GroundCaveMesh(int[,] _map, float _squareSize) {
 		squareSize = _squareSize;
-		width = _map.GetLength(0);
-		height = _map.GetLength(1);
+		width = _map.GetLength(0) - 1;
+		height = _map.GetLength(1) - 1;
 
 		GroundVertices();
 		GroundTriangles();
@@ -858,18 +855,18 @@ public class GroundCaveMesh {
 	//Change to return a mesh
 	void GroundVertices () {
 
-		vertices = new Vector3 [(width + 1) * (height + 1)];
+		vertices = new Vector3 [(width + 1) * (height +1)];
 		for (int y = 0, i = 0; y <= height; y++) {
 			for (int x = 0; x <= width; x++, i++) {
 				//Changed Vector position
-				vertices[i] = new Vector3 (-width/2 + x * squareSize + squareSize/2, -wallHeight/2, -height/2 + y * squareSize + squareSize/2);
+				vertices[i] = new Vector3 ((-width/2 + x -1) * squareSize + squareSize/2, -wallHeight, (-height/2 + y - 1) * squareSize + squareSize/2);
 			}
 		}
 	}
 
 	void GroundTriangles () {
 		//Change to triangles struct;
-		triangles = new int[width * height * 6];
+		triangles = new int[(width) * (height) * 6];
 		for (int ti = 0, vi = 0, y =0; y < height; y++, vi ++) {
 			for (int x = 0; x < width; x++, ti +=6, vi++) {
 				triangles [ti] = vi;

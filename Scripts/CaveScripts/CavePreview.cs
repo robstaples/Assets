@@ -38,6 +38,8 @@ public class CavePreview : MonoBehaviour {
         cMesh.RecalculateNormals();
         caveMeshFilter.sharedMesh = cMesh;
         caveMeshRenderer.gameObject.SetActive (true);
+        DestroyImmediate(caveMeshFilter.GetComponent<MeshCollider>());
+        caveMeshFilter.gameObject.AddComponent<MeshCollider>();
 
         Mesh wMesh = new Mesh();
         wMesh.vertices = caveMesh.wallCaveMesh.vertices.ToArray();
@@ -46,6 +48,8 @@ public class CavePreview : MonoBehaviour {
         wMesh.RecalculateNormals();
         wallMeshFilter.sharedMesh = wMesh;
         wallMeshRenderer.gameObject.SetActive (true);
+        DestroyImmediate(wallMeshFilter.GetComponent<MeshCollider>());
+        wallMeshFilter.gameObject.AddComponent<MeshCollider>();
 
         Mesh gMesh = new Mesh();
         gMesh.vertices = caveMesh.groundCaveMesh.vertices;
@@ -54,5 +58,7 @@ public class CavePreview : MonoBehaviour {
         gMesh.RecalculateNormals();
         groundMeshFilter.sharedMesh = gMesh;
         groundMeshRenderer.gameObject.SetActive (true);
-	}
+        DestroyImmediate(groundMeshFilter.GetComponent<MeshCollider>());
+        groundMeshFilter.gameObject.AddComponent<MeshCollider>();
+    }
 }
