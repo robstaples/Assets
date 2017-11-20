@@ -5,56 +5,48 @@ using UnityEngine;
 
 public class CaveGenerator : MonoBehaviour {
 
-	public int width;
-	public int height;
-
-	public string seed;
-	public bool useRandomSeed;
-
-	[Range (40,50)]
-	public int randomFillPercent;
-
-	[Header ("Advanced")]
-	public int border = 1;
-	public int passageWidth = 3;
-	public int smooth = 5;
+	public CaveSettings caveSettings;
 
 	int[,] map;
+
 	void Start() {
-		GenerateMap ();
+		GenerateMap(caveSettings);
 	}
+
+	//Need to have a look at changing this {Refactor}
 	void Update() {
 		if (Input.GetMouseButtonDown (0)) {
-			GenerateMap ();
+			GenerateMap(caveSettings);
 		}
 	}
 
-	void GenerateMap() {
-		map = new int[width, height];
-		RandomFillMap ();
+	public void GenerateMap(CaveSettings _caveSettings) {
 
-		for (int i = 0; i < smooth; i++) {
-			SmoothMap ();
+		caveSettings = _caveSettings;
+
+		map = new int[caveSettings.width, caveSettings.height];
+		RandomFillMap();
+
+		for (int i = 0; i < caveSettings.smooth; i++) {
+			SmoothMap();
 		}
 
 		ProcessMap();
 
-		int borderSize = border;
-		int[,] borderedMap = new int[width + borderSize * 2, height + borderSize * 2];
+		//Add this processing to CaveSettings {Refactor}
+		int[,] borderedMap = new int[caveSettings.width + caveSettings.borderSize * 2, caveSettings.height + caveSettings.borderSize * 2];
 
 		for (int x = 0; x < borderedMap.GetLength(0); x++) {
 			for (int y = 0; y < borderedMap.GetLength(1); y++) {
-				if (x>= borderSize && x < width + borderSize && y >= borderSize && y < height + borderSize) {
-					borderedMap[x,y] = map[x-borderSize,y-borderSize];
+				if (x>= caveSettings.borderSize && x < caveSettings.width + caveSettings.borderSize && y >= caveSettings.borderSize && y < caveSettings.height + caveSettings.borderSize) {
+					borderedMap[x,y] = map[x- caveSettings.borderSize,y- caveSettings.borderSize];
 				}
 				else {
 					borderedMap[x,y] = 1;
 				}
 			}
 		}
-
-		CaveMesh meshGen = GetComponent<CaveMesh> ();
-		meshGen.GenerateMesh (borderedMap, 1);
+        map = borderedMap;
 	}
 
 	void ProcessMap() {
@@ -170,7 +162,7 @@ public class CaveGenerator : MonoBehaviour {
 
 		List<Coord> line = GetLine(tileA, tileB);
 		foreach (Coord c in line) {
-			DrawCircle(c,passageWidth);
+			DrawCircle(c, caveSettings.passageWidth);
 		}
 	}
 
@@ -236,15 +228,15 @@ public class CaveGenerator : MonoBehaviour {
 	}
 
 	Vector3 CoordToWorldPoint(Coord tile) {
-		return new Vector3(-width/2+.5f + tile.tileX, 2, -height/2+.5f+tile.tileY);
+		return new Vector3(-caveSettings.width /2+.5f + tile.tileX, 2, -caveSettings.height /2+.5f+tile.tileY);
 	}
 
 	List<List<Coord>> GetRegions(int tileType) {
 		List<List<Coord>> regions = new List<List<Coord>>();
-		int[,] mapFlags = new int[width,height];
+		int[,] mapFlags = new int[caveSettings.width, caveSettings.height];
 
-		for (int x = 0; x < width; x++) {
-			for (int y = 0; y < height; y++) {
+		for (int x = 0; x < caveSettings.width; x++) {
+			for (int y = 0; y < caveSettings.height; y++) {
 				if (mapFlags[x,y] == 0 && map[x,y] == tileType) {
 					List<Coord> newRegion = GetRegionTiles(x,y);
 					regions.Add(newRegion);
@@ -259,7 +251,7 @@ public class CaveGenerator : MonoBehaviour {
 
 	List<Coord> GetRegionTiles(int startX, int startY) {
 		List<Coord> tiles = new List<Coord>();
-		int[,] mapFlags = new int[width,height];
+		int[,] mapFlags = new int[caveSettings.width, caveSettings.height];
 		int tileType = map[startX,startY];
 
 		Queue<Coord> queue = new Queue<Coord>();
@@ -285,31 +277,31 @@ public class CaveGenerator : MonoBehaviour {
 	}
 
 	bool IsInMapRange(int x, int y) {
-			return x >= 0 && x < width && y >= 0 && y < height;
+			return x >= 0 && x < caveSettings.width && y >= 0 && y < caveSettings.height;
 	}
 
 	void RandomFillMap(){
-		if (useRandomSeed) {
-			seed = Time.time.ToString ();
+		if (caveSettings.useRandomSeed) {
+            caveSettings.seed = Time.time.ToString ();
 		}
-		System.Random psuedoRandom = new System.Random (seed.GetHashCode ());
+		System.Random psuedoRandom = new System.Random (caveSettings.seed.GetHashCode ());
 
-		for (int x = 0; x < width; x++) {
-			for (int y = 0; y < height; y++) {
-				if (x == 0 || x == width -1 || y == 0 || y == height - 1)
+		for (int x = 0; x < caveSettings.width; x++) {
+			for (int y = 0; y < caveSettings.height; y++) {
+				if (x == 0 || x == caveSettings.width -1 || y == 0 || y == caveSettings.height - 1)
 				{
 					map [x, y] = 1;
 				}
 				else {
-					map [x, y] = (psuedoRandom.Next (0, 100) < randomFillPercent) ? 1 : 0;
+					map [x, y] = (psuedoRandom.Next (0, 100) < caveSettings.randomFillPercent) ? 1 : 0;
 				}
 			}
 		}
 	}
 
 	void SmoothMap() {
-		for (int x = 0; x < width; x++) {
-			for (int y = 0; y < height; y++) {
+		for (int x = 0; x < caveSettings.width; x++) {
+			for (int y = 0; y < caveSettings.height; y++) {
 				int neighourWallTiles = GetSurroundingWallCount (x, y);
 
 				if (neighourWallTiles > 4)
