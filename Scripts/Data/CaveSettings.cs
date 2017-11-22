@@ -19,4 +19,13 @@ public class CaveSettings : UpdatableData
   	public int smooth = 5;
 
     int[,] map;
+
+		#if UNITY_EDITOR
+
+		    protected override void OnValidate()
+		    {
+		        noiseSettings.ValidateValues();
+		        base.OnValidate();
+		    }
+		#endif
   }

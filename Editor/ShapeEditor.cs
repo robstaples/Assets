@@ -32,6 +32,11 @@ public class ShapeEditor : Editor
         }
     }
 
+    void CreateNewShape() {
+        shapeCreator.shapes.Add(new Shape());
+        selectionInfo.selectioninfo
+    }
+
     void HandleInput(Event guiEvent)
     {
         Ray mouseRay = HandleUtility.GUIPointToWorldRay(guiEvent.mousePosition);
@@ -63,7 +68,7 @@ public class ShapeEditor : Editor
         {
             int newPointIndex = (selectionInfo.mouseIsOverLine) ? selectionInfo.lineIndex + 1 : shapeCreator.points.Count;
             Undo.RecordObject(shapeCreator, "Add Point");
-            shapeCreator.points.Insert(newPointIndex, mousePosition);
+            selectedShape.points.Insert(newPointIndex, mousePosition);
             selectionInfo.pointIndex = newPointIndex;
         }
 
@@ -76,9 +81,9 @@ public class ShapeEditor : Editor
     {
         if (selectionInfo.isSelected)
         {
-            shapeCreator.points[selectionInfo.pointIndex] = selectionInfo.positionAtStartOfDrag;
+            selectedShape.points[selectionInfo.pointIndex] = selectionInfo.positionAtStartOfDrag;
             Undo.RecordObject(shapeCreator, "Move Point");
-            shapeCreator.points[selectionInfo.pointIndex] = mousePosition;
+            selectedShape.points[selectionInfo.pointIndex] = mousePosition;
             selectionInfo.isSelected = false;
             selectionInfo.pointIndex = -1;
             needsRepaint = true;
@@ -89,23 +94,26 @@ public class ShapeEditor : Editor
     {
         if (selectionInfo.isSelected)
         {
-            shapeCreator.points[selectionInfo.pointIndex] = mousePosition;
+            selectedShape.points[selectionInfo.pointIndex] = mousePosition;
             needsRepaint = true;
         }
     }
 
     void UpdateMouseOverInfo(Vector3 mousePosition)
     {
-        int mouseOverPointIndex = -1;
-        for (int i = 0; i < shapeCreator.points.Count; i++)
+      int mouseOverPointIndex = -1;
+      for (int shapeIndex = 0; shapeIndex < shapeCreator.shapes.Count; shapeIndex++) {
+        Shape currentShape = ShapeCreator.shapes[shapeIndex];
+
+        for (int i = 0; i < currentShape.points.Count; i++)
         {
-            if (Vector3.Distance(mousePosition, shapeCreator.points[i]) < shapeCreator.handleRadius)
+            if (Vector3.Distance(mousePosition, currentShape.points[i]) < currentShape.handleRadius)
             {
                 mouseOverPointIndex = i;
                 break;
             }
         }
-
+      }
         if (mouseOverPointIndex != selectionInfo.pointIndex)
         {
             selectionInfo.pointIndex = mouseOverPointIndex;
@@ -121,15 +129,18 @@ public class ShapeEditor : Editor
         {
             int mouseOverLineIndex = -1;
             float closestLineDst = shapeCreator.handleRadius;
-            for (int i = 0; i < shapeCreator.points.Count; i++)
-            {
-                Vector3 nextPointInShape = shapeCreator.points[(i + 1) % shapeCreator.points.Count];
-                float dstFromMouseToLine = HandleUtility.DistancePointToLineSegment(mousePosition.ToXZ(), shapeCreator.points[i].ToXZ(), nextPointInShape.ToXZ());
+            for (int shapeIndex = 0; shapeIndex < shapeCreator.shapes.Count; shapeIndex++) {
+              Shape currentShape = ShapeCreator.shapes[shapeIndex];
+              for (int i = 0; i < shapeCreator.points.Count; i++)
+              {
+                Vector3 nextPointInShape = currentShape.points[(i + 1) % currentShape.points.Count];
+                float dstFromMouseToLine = HandleUtility.DistancePointToLineSegment(mousePosition.ToXZ(), currentShape.points[i].ToXZ(), nextPointInShape.ToXZ());
                 if (dstFromMouseToLine < closestLineDst)
                 {
                     closestLineDst = dstFromMouseToLine;
                     mouseOverLineIndex = i;
                 }
+              }
             }
 
             if (selectionInfo.lineIndex != mouseOverLineIndex)
@@ -143,18 +154,20 @@ public class ShapeEditor : Editor
 
     void Draw()
     {
-        for (int i = 0; i < shapeCreator.points.Count; i++)
+      for (int shapeIndex = 0; shapeIndex < shapeCreator.shapes.Count; shapeIndex++) {
+        Shape shapeToDraw = ShapeCreator.shapes[shapeIndex];
+        for (int i = 0; i < shapeToDraw.points.Count; i++)
         {
             Vector3 nextPoint = shapeCreator.points[(i + 1) % shapeCreator.points.Count];
             if (i == selectionInfo.lineIndex)
             {
                 Handles.color = Color.red;
-                Handles.DrawLine(shapeCreator.points[i], nextPoint);
+                Handles.DrawLine(shapeToDraw.points[i], nextPoint);
             }
             else
             {
                 Handles.color = Color.black;
-                Handles.DrawDottedLine(shapeCreator.points[i], nextPoint, 4);
+                Handles.DrawDottedLine(shapeToDraw.points[i], nextPoint, 4);
             }
             if (i == selectionInfo.pointIndex)
             {
@@ -165,8 +178,9 @@ public class ShapeEditor : Editor
                 Handles.color = Color.white;
             }
 
-            Handles.DrawSolidDisc(shapeCreator.points[i], Vector3.up, shapeCreator.handleRadius);
+            Handles.DrawSolidDisc(shapeToDraw.points[i], Vector3.up, shapeToDraw.handleRadius);
             needsRepaint = false;
+          }
         }
     }
 
@@ -175,9 +189,16 @@ public class ShapeEditor : Editor
         shapeCreator = target as ShapeCreator;
         selectionInfo = new SelectionInfo();
     }
+    Shape selectedShape
+    {
+      get {
+        return shapeCreator.shapes[selectionInfo.selectionShapeIndex];
+      }
+    }
 
     public class SelectionInfo
     {
+        public int selectionShapeIndex;
         public int pointIndex;
         public bool mouseIsOverPoint;
         public bool isSelected;
