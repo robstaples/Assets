@@ -1,17 +1,23 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Sebastian.Geomerry;
 
 
-public class ShapeCreator : MonoBehaviour{
+public class ShapeCreator : MonoBehaviour
+{
+	public MeshFilter MeshFilter;
 
 	[HideInInspector]
 	public List<Shape> shapes = new List<Shape>();
 	
-    public float handleRadius = .5f;
-}
+	[HideInInspector]
+	public bool showShapesList;
 
-[System.Serializable]
-public class Shape {
-	    public List<Vector3> points = new List<Vector3>();
+    public float handleRadius = .5f;
+	public void UpdateMeshDisplay()
+	{
+		CompositeShape compShape = new CompositeShape(shapes);
+		MeshFilter.mesh = compShape.GetMesh();
+	}
 }
