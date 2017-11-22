@@ -24,7 +24,6 @@ public class CaveSettings : UpdatableData
 
 		    protected override void OnValidate()
 		    {
-		        noiseSettings.ValidateValues();
 		        base.OnValidate();
 		    }
 		#endif

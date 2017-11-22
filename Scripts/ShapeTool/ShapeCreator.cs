@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Sebastian.Geomerry;
+using Sebastian.Geometry;
 
 
 public class ShapeCreator : MonoBehaviour
