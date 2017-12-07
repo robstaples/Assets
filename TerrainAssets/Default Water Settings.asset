@@ -11,7 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8a4b88e6ee4ca241871bcc9a0d449f3, type: 3}
   m_Name: Default Water Settings
   m_EditorClassIdentifier: 
-  autoUpdate: 1
-  hasWater: 1
-  waterLevel: 0.072
+  autoUpdate: 0
+  hasWater: 0
+  waterLevel: 0
   waterPrefab: {fileID: 100000, guid: 780611a67e8e941a2b3aa96e5915a793, type: 2}

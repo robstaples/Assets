@@ -23,7 +23,20 @@ public class TextureGenerator
         {
             for (int x = 0; x < width; x++)
             {
-                colourMap[y * width + x] = Color.Lerp(Color.black, Color.white, Mathf.InverseLerp(heightMap.minValue, heightMap.maxValue, heightMap.values [x, y]));
+                colourMap[y * width + x] = Color.Lerp(Color.black, Color.white, Mathf.InverseLerp(0, heightMap.mapHeight, heightMap.values [x, y]));
+            }
+        }
+        return TextureFromColourMap(colourMap, width, height);
+    }
+    public static Texture2D TextureFromNoise(float[,] values, int width, int height)
+    {
+
+        Color[] colourMap = new Color[width * height];
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                colourMap[y * width + x] = Color.Lerp(Color.black, Color.white, Mathf.InverseLerp(0, 1, values[x, y]));
             }
         }
         return TextureFromColourMap(colourMap, width, height);

@@ -2,13 +2,13 @@
 using System.Collections;
 using UnityEditor;
 
-[CustomEditor(typeof(MapPreview))]
+[CustomEditor(typeof(WorldPreview))]
 public class MapPreviewEditor : Editor
 {
 
     public override void OnInspectorGUI()
     {
-        MapPreview mapPreview = (MapPreview)target;
+        WorldPreview mapPreview = (WorldPreview)target;
 
         if (DrawDefaultInspector())
         {

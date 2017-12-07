@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9455fc0e79e00f408effd80eaa3e6dc, type: 3}
+  m_Name: Foliage Data
+  m_EditorClassIdentifier: 
+  autoUpdate: 1
+  drawSize: {x: 100, y: 100}
+  randomOffset: 1
+  noiseSettings:
+    normalizeMode: 1
+    scale: 25
+    octaves: 6
+    persistance: 0.319
+    lacunarity: 3
+    seed: 10
+    offset: {x: 0, y: 0}
+  objects:
+  - preFab: {fileID: 1996489201916516, guid: 1afb173aa4667e149ab820357aa93c52, type: 2}
+    sizeMultiplier: 1
+    height: 0.1
+    placementRange: 0.5
+    preFabDensity: 10
+  - preFab: {fileID: 1880700904970310, guid: 5f692e54d637f2344aeb62d6284267f6, type: 2}
+    sizeMultiplier: 1
+    height: 0.2
+    placementRange: 0.05
+    preFabDensity: 6
+  - preFab: {fileID: 1146535192571056, guid: 17f1bd7f8be9ac741bce38688fe845a8, type: 2}
+    sizeMultiplier: 1
+    height: 0.3
+    placementRange: 0.005
+    preFabDensity: 6
+  - preFab: {fileID: 1515520122991320, guid: 6913dc198c7f4f84e87768995ba9ea5c, type: 2}
+    sizeMultiplier: 1
+    height: 0.6
+    placementRange: 0.005
+    preFabDensity: 6
+  - preFab: {fileID: 1085981461078224, guid: bfcaf1dab75f16a4cbc4d19ae66c5d7b, type: 2}
+    sizeMultiplier: 1
+    height: 0.8
+    placementRange: 0.05
+    preFabDensity: 6
