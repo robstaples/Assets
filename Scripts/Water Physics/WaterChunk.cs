@@ -10,7 +10,6 @@ public class WaterChunk
     GameObject waterObject;
 
     Transform viewer;
-	LODInfo[] detailLevels;
 
     Bounds bounds;
     Vector2 sampleCentre;
@@ -29,7 +28,6 @@ public class WaterChunk
         this.coord = coord;
         this.viewer = viewer;
 		this.waterObject = waterObject;
-		this.detailLevels = detailLevels;
 
         sampleCentre = coord * meshSettings.meshWorldSize / meshSettings.meshScale;
         Vector2 position = coord * meshSettings.meshWorldSize;

@@ -7,4 +7,13 @@ public static class ExtensionMethods {
     {
         return new Vector2(V3.x, V3.y);
     }
+    public static bool isBetween(float number, float min, float max)
+    {
+        return number >= min && number <= max;
+    }
+    public static int InverseDensity(int i, int rangeTop)
+    {
+        i = rangeTop + 1 - i;
+        return i;
+    }
 }
