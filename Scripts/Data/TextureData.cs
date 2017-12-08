@@ -8,6 +8,7 @@ public class TextureData : UpdatableData
     const int textureSize = 512;
     const TextureFormat textureFormat = TextureFormat.RGB565;
 
+    [Tooltip("The texture layers for the terrain mesh")]
     public Layer[] layers;
 
     float savedMinHeight;
@@ -52,14 +53,20 @@ public class TextureData : UpdatableData
     [System.Serializable]
     public class Layer
     {
+        [Tooltip("The texture asset for the layer.")]
         public Texture2D texture;
+        [Tooltip("The tint colour of the layer.")]
         public Color tint;
         [Range(0,1)]
+        [Tooltip("The strength of the tint on the texture.")]
         public float tintStrength;
         [Range(0, 1)]
+        [Tooltip("The starting height of the layer.")]
         public float startHeight;
         [Range(0, 1)]
+        [Tooltip("The strength that the texture blends into the previous layer")]
         public float blendStrength;
+        [Tooltip("The scale of the texture on the layer.")]
         public float textureScale;
     }
 

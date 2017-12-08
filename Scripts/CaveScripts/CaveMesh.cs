@@ -36,7 +36,7 @@ public class CaveMesh {
         AddVertices();
 		AddUVs();
 
-		wallCaveMesh = new WallCaveMesh(vertices, map, triangleDictionary, checkedVertices);
+		wallCaveMesh = new WallCaveMesh(vertices, map, caveSettings.wallHeight, triangleDictionary, checkedVertices);
 		groundCaveMesh = new GroundCaveMesh(map, squareSize);
 	}
 
@@ -716,7 +716,7 @@ public class WallCaveMesh {
 	public List<Vector3> vertices;
 	public List<int> triangles;
 	public Vector2[] uvs;
-	float wallHeight = 3;
+	float wallHeight;
 
 	Dictionary<int, List<Triangle>> triangleDictionary;
 	public List<List<int>> outlines;
@@ -724,7 +724,7 @@ public class WallCaveMesh {
 
     public List<Vector3> caveVertices;
 
-    public WallCaveMesh(List<Vector3> _caveVertices, int[,]_map,  Dictionary<int, List<Triangle>> _triangleDictionary,HashSet<int> _checkedVertices) {
+    public WallCaveMesh(List<Vector3> _caveVertices, int[,]_map, int _wallHeight,  Dictionary<int, List<Triangle>> _triangleDictionary,HashSet<int> _checkedVertices) {
 
 		vertices = new List<Vector3>();
 		triangles = new List<int>();
@@ -733,6 +733,7 @@ public class WallCaveMesh {
         caveVertices = _caveVertices;
         triangleDictionary = _triangleDictionary;
 		checkedVertices = _checkedVertices;
+        wallHeight = _wallHeight;
 
         CreateWallMesh(_map);
 

@@ -5,6 +5,7 @@ public class UpdatableData : ScriptableObject
 {
 
     public event System.Action OnValuesUpdated;
+    [Tooltip("Option to automatically apply updates in real time to the editor")]
     public bool autoUpdate;
 
 #if UNITY_EDITOR
